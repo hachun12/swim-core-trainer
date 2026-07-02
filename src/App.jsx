@@ -566,13 +566,20 @@ function Stepper({ value, onDec, onInc, suffix = "", compact = false }) {
 
 // 動作視覺：有 PNG 就顯示，載入失敗（檔案不存在）時自動退回 emoji 靜態圖標
 // fit：小縮圖用 "cover"（置中裁切），休息大圖／表單預覽用 "contain"（完整顯示不裁切）
-function ExerciseVisual({ ex, size, fit = "cover" }) {
+// responsive：true 時改用 100% 撐滿父層容器（配合 CSS 控制實際大小），用於橫向示範圖大圖區塊
+function ExerciseVisual({ ex, size, fit = "cover", responsive = false, className }) {
   const [err, setErr] = useState(false);
   useEffect(() => { setErr(false); }, [ex?.image]);
-  const box = { width: size, height: size, borderRadius: size * 0.14, background: "rgba(255,255,255,.16)", boxShadow: "0 6px 18px rgba(0,0,0,.15)" };
+  const box = responsive
+    ? { width: "100%", height: "100%", borderRadius: 24, background: "rgba(255,255,255,.16)", boxShadow: "0 6px 18px rgba(0,0,0,.15)" }
+    : { width: size, height: size, borderRadius: size * 0.14, background: "rgba(255,255,255,.16)", boxShadow: "0 6px 18px rgba(0,0,0,.15)" };
   if (ex?.image && !err)
-    return <img src={ex.image} alt={ex.name} onError={() => setErr(true)} style={{ ...box, objectFit: fit }} />;
-  return <div style={{ ...box, display: "grid", placeItems: "center", fontSize: size * 0.5 }}>{ex?.emoji}</div>;
+    return <img src={ex.image} alt={ex.name} className={className} onError={() => setErr(true)} style={{ ...box, objectFit: fit }} />;
+  return (
+    <div className={className} style={{ ...box, display: "grid", placeItems: "center", fontSize: responsive ? "min(28vw, 30vh, 160px)" : size * 0.5 }}>
+      {ex?.emoji}
+    </div>
+  );
 }
 
 /* ============================================================
@@ -685,65 +692,86 @@ function Trainer({ routine, library, onExit }) {
       </div>
     );
 
+  // 橫向大螢幕（平板橫放）時，右側大圖顯示的動作：WORK 顯示當下動作，其他狀態顯示下一個動作
+  const visualEx = seg.type === "WORK" ? seg.exercise : seg.nextExercise;
+  const visualLabel = seg.type === "WORK" ? "示範動作" : "接下來";
+
   return (
     <div style={{ ...S.screen, background: theme.g, justifyContent: "flex-start" }}>
-      <div style={S.topbar}>
-        <div style={S.topLeft}>
-          <span style={S.phasePill}>{seg.phaseName || "準備"}</span>
-          {seg.totalRounds > 1 && <span style={S.roundPill}>第 {seg.round} / {seg.totalRounds} 輪</span>}
-        </div>
-        <div style={S.topRight}>
-          <button style={S.iconBtn} onClick={() => setSoundOn((v) => !v)}>{soundOn ? <Volume2 size={22} /> : <VolumeX size={22} />}</button>
-          <button style={S.iconBtn} onClick={exit}><X size={22} /></button>
-        </div>
-      </div>
-
-      <div style={S.progressTrack}><div style={{ ...S.progressFill, width: `${overall * 100}%` }} /></div>
-      <div style={S.stateLabel}>
-        {seg.type === "WORK" ? "加油！撐住" : seg.type === "REST" ? "休息 · 看下一個動作" : seg.type === "ROUND_BREAK" ? "這輪完成，喘口氣" : "準備開始"}
-      </div>
-
-      <div style={S.ringWrap}>
-        <svg viewBox="0 0 300 300" style={S.ring}>
-          <circle cx="150" cy="150" r={R} fill="none" stroke="rgba(255,255,255,.22)" strokeWidth="16" />
-          <circle cx="150" cy="150" r={R} fill="none" stroke={theme.ring} strokeWidth="16" strokeLinecap="round"
-            strokeDasharray={C} strokeDashoffset={C * (1 - frac)} transform="rotate(-90 150 150)"
-            style={{ transition: "stroke-dashoffset .12s linear" }} />
-        </svg>
-        <div style={S.ringCenter}>
-          <div style={S.bigNum}>{fmt(remaining)}</div>
-          <div style={S.numUnit}>{Math.ceil(remaining) < 60 ? "秒" : "分:秒"}</div>
-        </div>
-      </div>
-
-      {seg.type === "WORK" ? (
-        <div style={S.exBlock}>
-          <div style={S.exName}>
-            <ExerciseVisual ex={seg.exercise} size={46} />
-            {seg.exercise.name}
+      <div className="trainerLayout">
+        <div className="trainerMain">
+          <div style={S.topbar}>
+            <div style={S.topLeft}>
+              <span style={S.phasePill}>{seg.phaseName || "準備"}</span>
+              {seg.totalRounds > 1 && <span style={S.roundPill}>第 {seg.round} / {seg.totalRounds} 輪</span>}
+            </div>
+            <div style={S.topRight}>
+              <button style={S.iconBtn} onClick={() => setSoundOn((v) => !v)}>{soundOn ? <Volume2 size={22} /> : <VolumeX size={22} />}</button>
+              <button style={S.iconBtn} onClick={exit}><X size={22} /></button>
+            </div>
           </div>
-          <div style={S.captionBox}>{caption || seg.exercise.keyPoints[0]}</div>
-          {seg.exercise.regression && <button style={S.regBtn} onClick={() => setShowReg((v) => !v)}>太累了？{showReg ? "收起" : "看退階做法"}</button>}
-          {showReg && seg.exercise.regression && <div style={S.regText}>💡 {seg.exercise.regression}</div>}
-          {seg.exercise.dangerSigns && <div style={S.danger}>⚠️ {seg.exercise.dangerSigns}</div>}
-        </div>
-      ) : (
-        <div style={S.exBlock}>
-          {seg.nextExercise && (<>
-            <div style={S.nextLabel}>接下來 <ChevronRight size={18} /></div>
-            <ExerciseVisual ex={seg.nextExercise} size={150} fit="contain" />
-            <div style={S.exName}>{seg.nextExercise.name}</div>
-            <div style={S.nextPoints}>{seg.nextExercise.keyPoints.map((k, i) => <span key={i} style={S.chip}>{k}</span>)}</div>
-          </>)}
-          <div style={S.captionBox}>{caption}</div>
-        </div>
-      )}
 
-      <div style={S.controls}>
-        <button style={S.ctrlBtn} onClick={() => goTo(segIndex - 1)}><SkipBack size={24} /></button>
-        <button style={S.mainCtrl} onClick={status === "paused" ? resume : pause}>{status === "paused" ? <Play size={30} fill="#12557a" /> : <Pause size={30} fill="#12557a" />}</button>
-        <button style={S.ctrlBtn} onClick={() => goTo(segIndex + 1)}><SkipForward size={24} /></button>
-        <button style={S.ctrlBtn} onClick={restart}><RotateCcw size={22} /></button>
+          <div style={S.progressTrack}><div style={{ ...S.progressFill, width: `${overall * 100}%` }} /></div>
+          <div style={S.stateLabel}>
+            {seg.type === "WORK" ? "加油！撐住" : seg.type === "REST" ? "休息 · 看下一個動作" : seg.type === "ROUND_BREAK" ? "這輪完成，喘口氣" : "準備開始"}
+          </div>
+
+          <div style={S.ringWrap}>
+            <svg viewBox="0 0 300 300" style={S.ring}>
+              <circle cx="150" cy="150" r={R} fill="none" stroke="rgba(255,255,255,.22)" strokeWidth="16" />
+              <circle cx="150" cy="150" r={R} fill="none" stroke={theme.ring} strokeWidth="16" strokeLinecap="round"
+                strokeDasharray={C} strokeDashoffset={C * (1 - frac)} transform="rotate(-90 150 150)"
+                style={{ transition: "stroke-dashoffset .12s linear" }} />
+            </svg>
+            <div style={S.ringCenter}>
+              <div style={S.bigNum}>{fmt(remaining)}</div>
+              <div style={S.numUnit}>{Math.ceil(remaining) < 60 ? "秒" : "分:秒"}</div>
+            </div>
+          </div>
+
+          {seg.type === "WORK" ? (
+            <div style={S.exBlock}>
+              <div style={S.exName}>
+                <ExerciseVisual ex={seg.exercise} size={46} className="inlineVisual" />
+                {seg.exercise.name}
+              </div>
+              <div style={S.captionBox}>{caption || seg.exercise.keyPoints[0]}</div>
+              {seg.exercise.regression && <button style={S.regBtn} onClick={() => setShowReg((v) => !v)}>太累了？{showReg ? "收起" : "看退階做法"}</button>}
+              {showReg && seg.exercise.regression && <div style={S.regText}>💡 {seg.exercise.regression}</div>}
+              {seg.exercise.dangerSigns && <div style={S.danger}>⚠️ {seg.exercise.dangerSigns}</div>}
+            </div>
+          ) : (
+            <div style={S.exBlock}>
+              {seg.nextExercise && (<>
+                <div style={S.nextLabel}>接下來 <ChevronRight size={18} /></div>
+                <ExerciseVisual ex={seg.nextExercise} size={150} fit="contain" className="inlineVisual" />
+                <div style={S.exName}>{seg.nextExercise.name}</div>
+                <div style={S.nextPoints}>{seg.nextExercise.keyPoints.map((k, i) => <span key={i} style={S.chip}>{k}</span>)}</div>
+              </>)}
+              <div style={S.captionBox}>{caption}</div>
+            </div>
+          )}
+
+          <div style={S.controls}>
+            <button style={S.ctrlBtn} onClick={() => goTo(segIndex - 1)}><SkipBack size={24} /></button>
+            <button style={S.mainCtrl} onClick={status === "paused" ? resume : pause}>{status === "paused" ? <Play size={30} fill="#12557a" /> : <Pause size={30} fill="#12557a" />}</button>
+            <button style={S.ctrlBtn} onClick={() => goTo(segIndex + 1)}><SkipForward size={24} /></button>
+            <button style={S.ctrlBtn} onClick={restart}><RotateCcw size={22} /></button>
+          </div>
+        </div>
+
+        {/* 橫向大螢幕才顯示：示範動作大圖，約佔畫面右側一半 */}
+        <div className="trainerVisualPanel">
+          {visualEx ? (
+            <>
+              <div style={S.visualLabel}>{visualLabel}</div>
+              <div style={S.visualBox}><ExerciseVisual ex={visualEx} fit="contain" responsive /></div>
+              <div style={S.visualName}>{visualEx.name}</div>
+            </>
+          ) : (
+            <div style={S.visualBox}><ExerciseVisual ex={{ emoji: "🏊" }} fit="contain" responsive /></div>
+          )}
+        </div>
       </div>
 
       {(seg.type === "REST" || seg.type === "ROUND_BREAK") && (
@@ -766,6 +794,17 @@ const CSS = `
 @keyframes drift { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 .wave svg { animation: drift 7s linear infinite; }
 @media (prefers-reduced-motion: reduce){ .wave svg{ animation:none } }
+
+.trainerLayout { width:100%; flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; }
+.trainerMain { width:100%; min-height:0; display:flex; flex-direction:column; align-items:center; }
+.trainerVisualPanel { display:none; }
+/* 橫向平板：示範動作大圖顯示在畫面右側，約佔一半寬度 */
+@media (orientation: landscape) {
+  .trainerLayout { flex-direction:row; align-items:stretch; gap:18px; }
+  .trainerMain { width:50%; overflow-y:auto; }
+  .trainerVisualPanel { display:flex; width:50%; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-height:0; padding:8px; }
+  .inlineVisual { display:none; }
+}
 `;
 const base = { fontFamily: "'Fredoka','Nunito',-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif" };
 const S = {
@@ -881,4 +920,8 @@ const S = {
   ctrlBtn: { ...base, width: 54, height: 54, display: "grid", placeItems: "center", background: "rgba(255,255,255,.2)", border: "none", borderRadius: 16, color: "#fff", cursor: "pointer" },
   mainCtrl: { ...base, width: 74, height: 74, display: "grid", placeItems: "center", background: "#fff", color: "#12557a", border: "none", borderRadius: "50%", cursor: "pointer", boxShadow: "0 6px 18px rgba(0,0,0,.2)" },
   wave: { position: "absolute", left: 0, right: 0, bottom: 0, height: 70, overflow: "hidden", pointerEvents: "none" },
+
+  visualLabel: { fontSize: 15, fontWeight: 700, letterSpacing: 1, opacity: .9 },
+  visualBox: { width: "min(90%, 62vh)", aspectRatio: "1 / 1", maxWidth: 520 },
+  visualName: { fontSize: 26, fontWeight: 700, textAlign: "center" },
 };
