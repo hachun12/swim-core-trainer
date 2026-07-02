@@ -1,0 +1,17 @@
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #0f2a3a;
+  font-family: "Fredoka", "Nunito", -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* 讓 App 佔滿整個畫面 */
+#root { display: flex; }
+#root > div { flex: 1; border-radius: 0 !important; }
