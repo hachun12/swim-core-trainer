@@ -67,6 +67,12 @@ const DEFAULT_ROUTINE = {
 
 const CUE_INTERVAL = 15;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+// 動作圖片路徑：搭配 Vite 的 base 設定（本機 "/"，GitHub Pages 為 "/repo名稱/"），
+// 執行時組出的字串不會被 Vite 自動改寫，需自行帶上 BASE_URL，避免部署到子路徑後 404。
+const exerciseImagePath = (filename) => `${import.meta.env.BASE_URL}exercises/${filename}`;
+// 相容舊資料：先前可能已把 "/exercises/xxx.png" 這種不含 base 的絕對路徑存進 localStorage，
+// 這裡取出檔名後用目前的 BASE_URL 重新組成正確路徑。
+const exerciseFilenameFromPath = (p) => (p || "").replace(/^.*\/exercises\//, "");
 const fmt = (s) => { const t = Math.ceil(Math.max(0, s)); return t < 60 ? `${t}` : `${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`; };
 
 function buildSegments(routine, lib) {
@@ -138,10 +144,14 @@ export default function SwimTrainerApp() {
   const [library, setLibrary] = useState(() => {
     const seed = {};
     // 內建動作：圖片依 id 對應 public/exercises/<id>.png，找不到時自動退回 emoji
-    for (const [k, v] of Object.entries(EXERCISES)) seed[k] = { ...v, image: v.image || `/exercises/${k}.png`, builtin: true };
+    for (const [k, v] of Object.entries(EXERCISES)) seed[k] = { ...v, image: exerciseImagePath(`${k}.png`), builtin: true };
     try {
       const s = localStorage.getItem(LS_CUSTOM);
-      if (s) { const custom = JSON.parse(s); for (const [k, v] of Object.entries(custom)) seed[k] = { ...v, builtin: false }; }
+      if (s) {
+        const custom = JSON.parse(s);
+        for (const [k, v] of Object.entries(custom))
+          seed[k] = { ...v, image: v.image ? exerciseImagePath(exerciseFilenameFromPath(v.image)) : undefined, builtin: false };
+      }
     } catch {}
     return seed;
   });
@@ -194,7 +204,8 @@ export default function SwimTrainerApp() {
     if (payload.exercises && typeof payload.exercises === "object") {
       setLibrary((lib) => {
         const merged = { ...lib };
-        for (const [k, v] of Object.entries(payload.exercises)) if (!merged[k]) merged[k] = { ...v, builtin: false };
+        for (const [k, v] of Object.entries(payload.exercises))
+          if (!merged[k]) merged[k] = { ...v, image: v.image ? exerciseImagePath(exerciseFilenameFromPath(v.image)) : undefined, builtin: false };
         return merged;
       });
     }
@@ -209,7 +220,8 @@ export default function SwimTrainerApp() {
     const usedCustomIds = new Set();
     routineData.phases.forEach((p) => p.items.forEach((it) => { if (library[it.id] && !library[it.id].builtin) usedCustomIds.add(it.id); }));
     const exercises = {};
-    usedCustomIds.forEach((k) => { exercises[k] = library[k]; });
+    // 匯出用檔名而非完整路徑，避免帶入本機的 base 路徑，讓匯入端能用自己的路徑正確組出圖片網址
+    usedCustomIds.forEach((k) => { exercises[k] = { ...library[k], image: library[k].image ? exerciseFilenameFromPath(library[k].image) : undefined }; });
     const payload = { type: "sct.routine.v1", routine: routineData, exercises };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -318,7 +330,7 @@ function Editor({ routine, setRoutine, library, setLibrary, onStart, onHome }) {
     setForm({ editId: id, name: e.name, emoji: e.emoji, category: e.category,
       keyPoints: (e.keyPoints || []).join("\n"), voiceCues: (e.voiceCues || []).join("\n"),
       regression: e.regression || "", danger: e.dangerSigns || "",
-      image: (e.image || "").replace(/^\/exercises\//, "") });
+      image: exerciseFilenameFromPath(e.image) });
   };
   const saveForm = () => {
     const keyPoints = form.keyPoints.split("\n").map((s) => s.trim()).filter(Boolean);
@@ -332,7 +344,7 @@ function Editor({ routine, setRoutine, library, setLibrary, onStart, onHome }) {
         keyPoints, voiceCues: voiceCues.length ? voiceCues : keyPoints,
         regression: form.regression.trim() || undefined,
         dangerSigns: form.danger.trim() || undefined,
-        image: fname ? `/exercises/${fname}` : undefined,
+        image: fname ? exerciseImagePath(fname) : undefined,
         builtin: form.editId ? (lib[form.editId]?.builtin ?? false) : false,
       }};
     });
@@ -498,7 +510,7 @@ function Editor({ routine, setRoutine, library, setLibrary, onStart, onHome }) {
             <label style={S.fLabel}>動作圖片檔名（選填；放在 public/exercises/ 內的 PNG）</label>
             <div style={S.gifUploadRow}>
               <div style={S.gifPreview}>
-                <ExerciseVisual ex={{ image: form.image.trim() ? `/exercises/${form.image.trim()}` : undefined, emoji: form.emoji, name: form.name }} size={88} fit="contain" />
+                <ExerciseVisual ex={{ image: form.image.trim() ? exerciseImagePath(form.image.trim()) : undefined, emoji: form.emoji, name: form.name }} size={88} fit="contain" />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
                 <input style={S.fInput} value={form.image} placeholder="例如：streamline-plank.png"
