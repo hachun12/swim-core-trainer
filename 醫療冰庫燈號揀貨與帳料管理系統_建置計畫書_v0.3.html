@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>醫療冰庫電子燈號揀貨與帳料管理系統 — 建置計畫書 v0.3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lightbox:#EEF1F4;
+  --paper:#FFFFFF;
+  --ink:#13171B;
+  --graphite:#5C666F;
+  --rule:#D2D9DF;
+  --rule-soft:#E4E9ED;
+  --verify:#1B4D8F;
+  --halt:#A81E28;
+  --hold:#8A6A12;
+  --mono:"IBM Plex Mono","Roboto Mono",ui-monospace,monospace;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--lightbox);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+
+.masthead{border-bottom:1px solid var(--rule)}
+.mast-inner{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding:18px 0;flex-wrap:wrap}
+.mark{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--graphite)}
+.mark b{color:var(--ink);font-weight:600}
+.meta{font-family:var(--mono);font-size:11px;color:var(--graphite);letter-spacing:.06em}
+
+.hero{padding:72px 0 6px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--verify);margin-bottom:22px}
+h1{font-weight:900;font-size:clamp(31px,5.2vw,55px);line-height:1.13;letter-spacing:-.02em;margin:0 0 26px;max-width:20ch}
+h1 em{font-style:normal;display:block;color:var(--graphite);font-weight:500;font-size:.45em;letter-spacing:0;line-height:1.6;margin-top:20px;max-width:46ch}
+.thesis{max-width:60ch;font-size:17px;border-left:2px solid var(--ink);padding-left:20px;margin:0 0 50px}
+
+/* flow chain */
+.chain{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin:0 0 12px}
+.node{background:var(--paper);padding:20px 18px 22px;position:relative}
+.node .ni{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--verify);margin-bottom:9px}
+.node h4{margin:0 0 7px;font-size:15px;font-weight:700;letter-spacing:-.005em}
+.node p{margin:0;font-size:13px;color:var(--graphite);line-height:1.6}
+.node.terminal{background:#F7F9FB}
+.node .bar{position:absolute;left:0;right:0;bottom:0;height:3px}
+.chain-key{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;color:var(--graphite);text-transform:uppercase;margin-bottom:38px}
+
+/* instrument */
+.instrument{background:var(--paper);border:1px solid var(--rule);padding:30px 30px 26px;margin-bottom:16px}
+.inst-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+.inst-title{font-weight:700;font-size:17px;margin:0}
+.inst-note{font-family:var(--mono);font-size:10.5px;color:var(--graphite);letter-spacing:.08em;text-transform:uppercase}
+.inst-sub{color:var(--graphite);font-size:14px;margin:6px 0 22px;max-width:64ch}
+svg.plot{width:100%;height:auto;display:block}
+.ctrl{margin-top:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ctrl label{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--graphite);white-space:nowrap;min-width:96px}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:180px;height:2px;background:var(--rule);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--paper);border:2px solid var(--verify);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--paper);border:2px solid var(--verify);cursor:pointer}
+input[type=range]:focus-visible{outline:2px solid var(--verify);outline-offset:6px}
+.ctrl output{font-family:var(--mono);font-size:12px;min-width:38px;text-align:right}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:22px}
+.readout div{background:var(--paper);padding:16px 18px}
+.readout .rk{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--graphite);display:block;margin-bottom:6px}
+.readout .rv{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1}
+.readout .rd{font-size:12px;color:var(--graphite);margin-top:8px;line-height:1.5}
+.rv.far{color:var(--halt)} .rv.hold{color:var(--hold)} .rv.base{color:var(--verify)}
+
+.layout{display:grid;grid-template-columns:170px 1fr;gap:56px;padding:68px 0 30px;align-items:start}
+nav.toc{position:sticky;top:26px;font-family:var(--mono);font-size:11.5px;line-height:1.9;border-top:1px solid var(--ink);padding-top:12px}
+nav.toc a{display:block;color:var(--graphite);text-decoration:none;letter-spacing:.03em;padding:1px 0}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--ink)}
+nav.toc a .n{display:inline-block;width:30px;color:var(--rule)}
+main{min-width:0;max-width:74ch}
+
+section{padding-bottom:62px}
+h2{font-size:26px;font-weight:900;letter-spacing:-.015em;margin:0 0 6px;padding-top:14px;border-top:1px solid var(--ink)}
+h2 .sec{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--verify);letter-spacing:.14em;display:block;margin-bottom:12px}
+.lede{color:var(--graphite);font-size:15px;margin:10px 0 28px;max-width:58ch}
+h3{font-size:16.5px;font-weight:700;margin:32px 0 10px;letter-spacing:-.005em}
+p{margin:0 0 15px}
+ul{margin:0 0 16px;padding-left:0;list-style:none}
+ul li{position:relative;padding-left:20px;margin-bottom:9px}
+ul li::before{content:"";position:absolute;left:0;top:11px;width:7px;height:1px;background:var(--graphite)}
+code{font-family:var(--mono);font-size:.9em;background:var(--rule-soft);padding:1px 5px}
+
+.decisions{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);margin:24px 0 8px}
+.dec{background:var(--paper);padding:24px 26px}
+.dec .dk{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--verify);margin-bottom:10px}
+.dec h4{margin:0 0 10px;font-size:16px;font-weight:700}
+.dec p{margin:0;font-size:14.5px}
+.dec p + p{margin-top:10px}
+.versus{font-family:var(--mono);font-size:12px;color:var(--graphite);margin-top:12px;padding-top:11px;border-top:1px dashed var(--rule)}
+.versus b{color:var(--halt);font-weight:600}
+
+.pipe{border:1px solid var(--rule);background:var(--paper);margin:22px 0}
+.stage{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--rule-soft)}
+.stage:last-child{border-bottom:none}
+.stage .idx{font-family:var(--mono);font-size:12px;color:var(--verify);border-right:1px solid var(--rule-soft);display:flex;align-items:center;justify-content:center;background:#F7F9FB}
+.stage .body{padding:16px 20px}
+.stage h5{margin:0 0 5px;font-size:14.5px;font-weight:700}
+.stage p{margin:0;font-size:13.5px;color:var(--graphite);line-height:1.65}
+
+.tbl{width:100%;border-collapse:collapse;margin:20px 0 8px;font-size:14px}
+.tbl th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--graphite);font-weight:500;padding:0 14px 9px 0;border-bottom:1px solid var(--ink);white-space:nowrap}
+.tbl td{padding:13px 14px 13px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+.tbl td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:none}
+.scroller{overflow-x:auto;margin:0 -28px;padding:0 28px}
+
+.flag{border-left:2px solid var(--halt);padding:2px 0 2px 20px;margin:26px 0;font-size:14.5px}
+.flag .ft{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--halt);display:block;margin-bottom:7px}
+.flag p{margin:0}
+.flag p + p{margin-top:10px}
+
+.gates{margin:22px 0}
+.gaterow{display:grid;grid-template-columns:96px 1fr;gap:20px;padding:18px 0;border-bottom:1px solid var(--rule)}
+.gaterow:first-child{border-top:1px solid var(--rule)}
+.gaterow .when{font-family:var(--mono);font-size:12px;color:var(--verify);letter-spacing:.05em;padding-top:2px}
+.gaterow h5{margin:0 0 6px;font-size:15px;font-weight:700}
+.gaterow p{margin:0;font-size:13.8px;color:var(--graphite)}
+.gaterow .crit{margin-top:9px;font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--rule-soft);padding:8px 11px;line-height:1.6}
+
+footer{border-top:1px solid var(--ink);padding:26px 0 60px;font-family:var(--mono);font-size:11px;color:var(--graphite);letter-spacing:.06em;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;gap:0;padding-top:44px}
+  nav.toc{position:static;margin-bottom:44px;columns:2;column-gap:24px}
+  .readout,.chain{grid-template-columns:1fr}
+  .hero{padding-top:46px}
+  .instrument{padding:22px 18px}
+  .wrap{padding:0 20px}
+  .scroller{margin:0 -20px;padding:0 20px}
+  .ctrl label{min-width:0}
+}
+
+nav.toc a.sub{padding-left:30px;font-size:11px;color:#8A939B}
+nav.toc a.sub .n{width:16px}
+nav.toc a.top{margin-top:7px}
+.gantt{border:1px solid var(--rule);background:var(--paper);margin:22px 0 10px;font-size:12px;overflow:hidden}
+.grow{display:grid;grid-template-columns:190px repeat(16,1fr);border-bottom:1px solid var(--rule-soft)}
+.grow:last-child{border-bottom:none}
+.grow.head{border-bottom:1px solid var(--ink)}
+.gcell{border-right:1px solid var(--rule-soft);min-height:34px;position:relative}
+.gcell:last-child{border-right:none}
+.glabel{padding:9px 12px;border-right:1px solid var(--rule);display:flex;align-items:center;line-height:1.4;font-size:12.5px}
+.grow.head .glabel{background:#F7F9FB;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--graphite)}
+.grow.head .gcell{background:#F7F9FB;font-family:var(--mono);font-size:10px;color:var(--graphite);display:flex;align-items:center;justify-content:center;min-height:26px}
+.gbar{position:absolute;top:9px;bottom:9px;left:2px;right:2px;background:var(--verify)}
+.gbar.soft{background:#9FB4CE}
+.gmark{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--halt);transform:translateX(-1px)}
+.gmark span{position:absolute;top:5px;left:5px;font-family:var(--mono);font-size:9.5px;color:var(--halt);font-weight:600}
+.gantt-key{font-family:var(--mono);font-size:10.5px;color:var(--graphite);letter-spacing:.08em;text-transform:uppercase;display:flex;gap:20px;flex-wrap:wrap;margin-bottom:26px}
+.gantt-key i{display:inline-block;width:9px;height:9px;margin-right:6px;position:relative;top:1px}
+.gwrap{overflow-x:auto;margin:0 -28px;padding:0 28px}
+.gantt{min-width:760px}
+h3{scroll-margin-top:20px}
+.subhead{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--verify);margin:38px 0 -4px}
+@media(max-width:900px){nav.toc{columns:1}.gwrap{margin:0 -20px;padding:0 20px}}
+
+.gantt.w24{min-width:1020px}
+.gantt.w16{min-width:920px}
+.gantt.w24 .grow{grid-template-columns:210px repeat(24,1fr)}
+.chain.c5{grid-template-columns:repeat(5,1fr)}
+@media(max-width:900px){.gantt.w24 .grow{grid-template-columns:150px repeat(24,1fr)}}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap mast-inner">
+    <div class="mark"><b>醫療冰庫</b> ／ 電子燈號揀貨與帳料管理系統</div>
+    <div class="meta">建置計畫書 · v0.3 · 2026-08-26 · 雛型建置與場域驗證</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">系統建置與場域驗證 · 十六週</div>
+    <h1>以燈號縮短尋找，<br>以掃描鎖住帳務。
+      <em>入庫與出庫均由系統指派儲位、以 RGB 燈號指引取放位置，並以掃描確認實際品項後始更新庫存。本計畫以十六週完成雛型建置，並於實際場域驗證其帳料一致性與作業效率。</em>
+    </h1>
+    <p class="thesis">本系統之核心價值不在於揀貨速度，而在於<strong>帳料一致性</strong>。取放與登錄之誤差不易當場察覺，其影響會隨交易次數持續累積，且僅能藉由盤點歸零。降低單筆作業錯誤率，其效益高於提高盤點頻率。</p>
+  </div>
+
+  <div class="chain c5">
+    <div class="node"><div class="ni">01</div><h4>任務建立</h4><p>建立入庫或出庫需求，系統依儲位規則與效期順序指派目標儲位。</p><div class="bar" style="background:var(--verify)"></div></div>
+    <div class="node"><div class="ni">02</div><h4>標籤產製</h4><p>列印並貼附標籤，建立單品級識別碼，作為後續追溯之依據。</p><div class="bar" style="background:var(--verify)"></div></div>
+    <div class="node"><div class="ni">03</div><h4>燈號指引</h4><p>經 MQTT 下發指令，逐筆點亮目標儲位之 RGB 燈條，入庫與出庫以顏色區分。</p><div class="bar" style="background:var(--verify)"></div></div>
+    <div class="node"><div class="ni">04</div><h4>掃描確認</h4><p>以手持式 QR Reader 掃描實際取放之品項，與任務內容比對，確認後該儲位燈號熄滅。</p><div class="bar" style="background:var(--hold)"></div></div>
+    <div class="node terminal"><div class="ni">05</div><h4>帳務更新</h4><p>相符者更新庫存與履歷；不符者回報差異並保留原帳，不予過帳。</p><div class="bar" style="background:linear-gradient(90deg,var(--halt) 0 18%,var(--hold) 18% 40%,var(--verify) 40% 100%)"></div></div>
+  </div>
+  <div class="chain-key">掃描確認為過帳之前置條件，未通過確認之交易不更新庫存</div>
+
+  <div class="instrument">
+    <div class="inst-head">
+      <h2 class="inst-title" style="border:none;padding:0;font-size:17px;font-weight:700">帳料偏差之累積與歸零</h2>
+      <span class="inst-note">示意模型／非實測資料</span>
+    </div>
+    <p class="inst-sub">未被察覺的作業誤差會逐筆累積為帳料偏差，僅能藉由盤點歸零，形成鋸齒狀曲線。偏差量與單筆錯誤率、盤點週期均成正比。假設每週交易 300 筆。</p>
+
+    <svg class="plot" viewBox="0 0 720 250" role="img" aria-label="帳料偏差隨時間累積並於盤點時歸零之示意圖">
+      <defs><clipPath id="clipPlot"><rect x="52" y="14" width="640" height="176"/></clipPath></defs>
+      <line x1="52" y1="190" x2="692" y2="190" stroke="#13171B" stroke-width="1"/>
+      <g clip-path="url(#clipPlot)">
+        <path id="saw" fill="#1B4D8F" fill-opacity="0.13" stroke="#1B4D8F" stroke-width="1.6" stroke-linejoin="round"/>
+        <line id="thr" x1="52" x2="692" stroke="#A81E28" stroke-width="1.2" stroke-dasharray="5 4"/>
+      </g>
+      <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#5C666F">
+        <text x="44" y="194" text-anchor="end">0</text>
+        <text x="44" y="110" text-anchor="end">55</text>
+        <text x="44" y="28" text-anchor="end">110</text>
+        <text x="52" y="208">W1</text>
+        <text x="372" y="208" text-anchor="middle">W26</text>
+        <text x="692" y="208" text-anchor="end">W52</text>
+        <text x="372" y="232" text-anchor="middle" letter-spacing="1.4">帳料偏差筆數（一年期間）</text>
+        <text id="thrLbl" x="688" y="0" text-anchor="end" fill="#A81E28" font-size="10">可接受偏差上限 10 筆</text>
+      </g>
+    </svg>
+
+    <div class="ctrl">
+      <label for="perr">單筆錯誤率</label>
+      <input type="range" id="perr" min="0.001" max="0.030" step="0.001" value="0.012" aria-label="單筆作業錯誤率">
+      <output id="oPerr">1.2%</output>
+    </div>
+    <div class="ctrl">
+      <label for="cyc">盤點週期</label>
+      <input type="range" id="cyc" min="1" max="12" step="1" value="6" aria-label="盤點週期（週）">
+      <output id="oCyc">6 週</output>
+    </div>
+
+    <div class="readout">
+      <div>
+        <span class="rk">盤點前最大偏差</span>
+        <span class="rv far" id="vMax">—</span>
+        <p class="rd">盤點執行前一刻之帳料落差，為稽核與缺料風險之上限。</p>
+      </div>
+      <div>
+        <span class="rk">時間平均偏差</span>
+        <span class="rv hold" id="vAvg">—</span>
+        <p class="rd">全年任一時點之帳料落差期望值，反映庫存資訊之可信程度。</p>
+      </div>
+      <div>
+        <span class="rk">年盤點次數</span>
+        <span class="rv base" id="vCnt">—</span>
+        <p class="rd">盤點須中斷正常作業並全面清點，其頻率直接對應人力成本。</p>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--graphite);margin:16px 0 0">提高盤點頻率可壓低偏差，惟代價為人力投入與作業中斷；降低單筆錯誤率則同時降低偏差並允許延長盤點週期。本系統以燈號指引降低取放錯誤、以掃描確認阻斷未經核對之過帳，其效益即在於後者，此亦為（二）以帳料一致率而非揀貨速度作為首要指標之依據。</p>
+  </div>
+</div>
+
+<div class="wrap layout">
+  <nav class="toc" aria-label="章節目錄">
+    <a class="top" href="#s1"><span class="n">一</span>計畫架構</a>
+    <a class="top" href="#s2"><span class="n">二</span>計畫目標</a>
+    <a class="sub" href="#s2-1"><span class="n">1</span>里程碑目標</a>
+    <a class="sub" href="#s2-2"><span class="n">2</span>技術發展目標</a>
+    <a class="top" href="#s3"><span class="n">三</span>實施策略／方法</a>
+    <a class="top" href="#s4"><span class="n">四</span>預定進度及查核點</a>
+    <a class="sub" href="#s4-1"><span class="n">1</span>預定進度</a>
+    <a class="sub" href="#s4-2"><span class="n">2</span>查核點說明</a>
+  </nav>
+
+  <main>
+
+  <section id="s1">
+    <h2><span class="sec">（一）</span>計畫架構</h2>
+    <p class="lede">本節說明本系統之定位、技術路線之選擇依據、軟硬體架構組成，以及工作項目之分解方式。</p>
+
+    <h3>1、計畫定位</h3>
+    <p>醫療冰庫存放之試劑與藥品具三項共同特性：<strong>單價高、品項多、具效期</strong>。其管理困難之處不在搬運，而在多儲位環境下的查找效率、帳務與實物之一致性，以及效期先出之落實。</p>
+    <p>現行作業之主要問題如下：</p>
+    <ul>
+      <li><strong>儲位查找依賴人員記憶與目視。</strong>品項數增加後，查找時間與錯取風險同步上升，且新進人員需長時間熟悉。</li>
+      <li><strong>領用登錄多於作業後補登。</strong>登錄與實際取放之間存在時間差與遺漏，形成帳務落差，且落差發生時無從察覺。</li>
+      <li><strong>效期管理依賴人工目視挑選。</strong>同一儲位存放不同效期批次時，先到期者未必先出，導致逾效期報廢。</li>
+      <li><strong>盤點須全面清點。</strong>人力成本高，頻率因而受限，帳料落差長期存在而不被修正。</li>
+    </ul>
+    <p>本計畫以<strong>電子燈號指引取放位置、以掃描確認實際品項、以確認結果驅動帳務更新</strong>，將上述環節整合為單一作業流程。系統之核心產出為可信之庫存資訊與單品級追溯紀錄，作業效率之提升為附帶效益。</p>
+
+    <h3>2、技術路線選擇</h3>
+    <p>本計畫採電子燈號指引結合掃描確認之組合，其選擇依據如下表所示。</p>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>作業方式</th><th>儲位查找</th><th>取放正確性確認</th><th>帳務即時性</th><th>作業步驟增加</th><th>建置成本</th></tr></thead>
+      <tbody>
+        <tr><td>人工紙本作業</td><td>依記憶與目視</td><td>無客觀確認</td><td>事後補登</td><td>—</td><td>低</td></tr>
+        <tr><td>條碼掃描（無燈號）</td><td>仍需人工查找</td><td>掃描確認</td><td>即時</td><td>掃描一次</td><td>中</td></tr>
+        <tr><td>單品 RFID</td><td>可定位</td><td>自動判讀</td><td>即時</td><td>逐件貼標</td><td>高</td></tr>
+        <tr><td><strong>燈號指引結合掃描確認</strong></td><td><strong>燈號直接指示</strong></td><td><strong>掃描確認</strong></td><td><strong>即時</strong></td><td>掃描一次</td><td>中</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>燈號解決「查找」、掃描解決「確認」，兩者功能互補而不重疊，且掃描動作即為確認動作，不額外增加作業步驟。RFID 雖可同時解決兩者，惟金屬料架與含液體品項對電磁波之影響使讀取率不易穩定，且單品貼標成本較高，本期不予採用。</p>
+
+    <h3>3、系統架構</h3>
+    <p>全系統分為四層，各層組成與本期交付項目如下表。</p>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>層級</th><th>組成</th><th>技術規格</th><th>本期交付</th></tr></thead>
+      <tbody>
+        <tr><td><strong>現場層</strong></td><td>五層式料架 ×3、RGB 燈條、電控箱（微控器與電源）</td><td>料架 W1220×D455×H1820 mm；可定址式 RGB 燈條；儲位對應 LED 索引映射</td><td>料架燈號模組 3 座、電控箱 1 式</td></tr>
+        <tr><td><strong>通訊層</strong></td><td>MQTT 訊息佇列、HTTP</td><td>微控器與 Broker 間採 MQTT；平板與伺服器間採 HTTP</td><td>通訊協定規格與韌體</td></tr>
+        <tr><td><strong>伺服器層</strong></td><td>工業型迷你電腦（Windows 10／11 專業版）</td><td>Apache 網頁伺服器、MySQL 資料庫、MQTT Broker、冷藏藥倉系統</td><td>伺服器部署與資料庫結構</td></tr>
+        <tr><td><strong>人機介面層</strong></td><td>平板電腦、手持式 QR Reader、4 吋桌上型標籤印表機</td><td>平板採 Windows 平台；Reader 採 USB 介面；印表機經 USB 連接伺服器</td><td>13 項功能畫面與標籤格式</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>4、軟體功能架構</h3>
+    <p>應用系統分為四大模組，計 13 項功能。畫面流程採登入畫面、選單畫面、功能畫面三層結構，各功能畫面均可經返回鍵回到選單畫面，選單畫面提供登出。</p>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>模組</th><th>功能項目</th><th>資料維護</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="4"><strong>A 基本資料建立</strong></td><td>A1 人員資料</td><td>新增／刪除／修改</td><td>作業人員基本資料</td></tr>
+        <tr><td>A2 人員權限資料</td><td>新增／刪除／修改</td><td>依模組與作業別設定權限</td></tr>
+        <tr><td>A3 試劑資料</td><td>新增／刪除／修改</td><td>品項主檔，含效期與儲存條件欄位</td></tr>
+        <tr><td>A4 儲位設定</td><td>新增／刪除／修改</td><td>儲位編碼與 LED 索引之對應維護</td></tr>
+        <tr><td rowspan="3"><strong>B 入庫管理</strong></td><td>B1 入庫標籤資料建立</td><td>新增／刪除／修改</td><td>建立單品級識別碼、批號與效期</td></tr>
+        <tr><td>B2 入庫標籤列印作業</td><td>—</td><td>產製並列印 QR 標籤</td></tr>
+        <tr><td>B3 入庫作業</td><td>—</td><td>燈號指引置入儲位，掃描確認後過帳</td></tr>
+        <tr><td rowspan="3"><strong>C 出庫管理</strong></td><td>C1 出庫標籤資料建立</td><td>新增／刪除／修改</td><td>建立領用單與品項明細</td></tr>
+        <tr><td>C2 出庫標籤列印作業</td><td>—</td><td>產製並列印領用標籤</td></tr>
+        <tr><td>C3 出庫作業</td><td>—</td><td>依效期順序燈號指引，掃描確認後過帳</td></tr>
+        <tr><td rowspan="3"><strong>D 物料盤點</strong></td><td>D1 領用記錄查詢</td><td>—</td><td>依人員、品項、期間查詢領用軌跡</td></tr>
+        <tr><td>D2 庫存紀錄查詢</td><td>—</td><td>即時庫存、效期分布與儲位分布</td></tr>
+        <tr><td>D3 盤點作業</td><td>—</td><td>燈號輔助盤點，差異登錄與調整</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>5、工作項目分解</h3>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>工作項目</th><th>內容</th><th>對應層級</th></tr></thead>
+      <tbody>
+        <tr><td class="num">WP1</td><td>系統規格與介面定義：儲位編碼規則、資料模型、通訊協定、畫面規格、標籤格式</td><td>全案</td></tr>
+        <tr><td class="num">WP2</td><td>料架與燈號硬體：燈條配置與定址、儲位分隔、電控箱設計與布線</td><td>現場層</td></tr>
+        <tr><td class="num">WP3</td><td>韌體與通訊：微控器韌體、MQTT 指令集、燈號驅動與閉環控制、離線容錯</td><td>現場層／通訊層</td></tr>
+        <tr><td class="num">WP4</td><td>伺服器與資料庫：資料庫結構、Apache 與 Broker 部署、備份機制、權限控管</td><td>伺服器層</td></tr>
+        <tr><td class="num">WP5</td><td>應用系統：A 至 D 四模組共 13 項功能畫面、儲位指派與效期派工邏輯、盤點差異處理</td><td>伺服器層／人機介面層</td></tr>
+        <tr><td class="num">WP6</td><td>標籤與掃描整合：QR 編碼規則、印表機整合、掃描流程與異常處理</td><td>人機介面層</td></tr>
+        <tr><td class="num">WP7</td><td>系統整合與場域驗證：整合測試、現場安裝、場域試運行、指標量測</td><td>全案</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>6、計畫範圍界定</h3>
+    <p><strong>本期執行範圍：</strong>3 座五層式料架之燈號模組建置；儲位燈號指引之入庫、出庫與盤點作業；單品級 QR 標籤產製與掃描確認；A 至 D 四模組共 13 項功能畫面；帳料一致性與作業效率驗證；單一場域試運行。</p>
+    <p><strong>本期不執行範圍：</strong>與醫院資訊系統或既有進銷存系統之介接；溫度監控與冷鏈履歷功能；自動化搬運設備；多場域部署與多庫別管理；行動裝置原生應用程式；量產設計與安規驗證。</p>
+
+    <div class="flag">
+      <span class="ft">前提假設</span>
+      <p>本計畫依下列條件規劃，如與實際條件不符，應於第一週提報調整：儲位規劃以每層 8 儲位計，全系統共 <strong>120 儲位</strong>；單一庫別、單一料架群組；作業型態以<strong>單人單任務</strong>為主，多人同時作業列為選配驗證項目；電控箱與伺服器之布線路徑可於現場配置。</p>
+      <p>本期不含溫度監控與冷鏈履歷功能。該功能之邊際成本不高（感測器與韌體擴充），如場域有稽核需求，建議列為次期擴充項目。</p>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="sec">（二）</span>計畫目標</h2>
+    <p class="lede">本期定位為雛型建置與場域驗證，目標為完成系統整合並取得帳料一致性與作業效率之量化數據。</p>
+
+    <h3 id="s2-1">1、本年度欲達成對產業影響之里程碑目標</h3>
+    <p><strong>里程碑目標：</strong>完成醫療冰庫電子燈號揀貨與帳料管理系統雛型建置，於實際場域完成試運行，並取得帳料一致性、燈號指引正確性與作業效率之量化數據。</p>
+
+    <div class="decisions">
+      <div class="dec">
+        <div class="dk">產業影響 一</div>
+        <h4>建立單品級帳料追溯能力</h4>
+        <p>本系統以單品級識別碼為基礎，可完整記錄各品項之入庫時間、儲位、領用人員與領用時間。</p>
+        <p>相較於現行以批號為單位之管理方式，單品級追溯可支援效期管理、領用稽核與異常回溯，為庫存資訊可信度之基礎。</p>
+      </div>
+      <div class="dec">
+        <div class="dk">產業影響 二</div>
+        <h4>形成可複製之燈號導引與帳料管理架構</h4>
+        <p>本計畫所建立之三項核心機制——<strong>儲位燈號閉環指引</strong>、<strong>掃描確認驅動過帳</strong>、<strong>動態儲位與效期派工</strong>——為多儲位、多品項且具效期管理需求場域之共通課題。</p>
+        <p>相同架構可延伸應用於檢驗耗材櫃、手術耗材庫、實驗室試劑櫃等場域，其軟體核心與燈號模組均可獨立移轉。</p>
+      </div>
+      <div class="dec">
+        <div class="dk">產業影響 三</div>
+        <h4>以模組化架構降低導入成本</h4>
+        <p>系統採一般料架加裝燈號模組之架構，不需更換既有儲存設備，亦不依賴特定廠牌之倉儲系統。</p>
+        <p>此一架構使既有場域得以漸進式導入，對預算有限之醫療院所與檢驗單位具可及性。</p>
+      </div>
+    </div>
+
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>里程碑項目</th><th>衡量方式</th><th>本年度達成</th></tr></thead>
+      <tbody>
+        <tr><td>雛型系統</td><td>五節點全流程可運行之實體系統</td><td class="num">1 套</td></tr>
+        <tr><td>燈號模組</td><td>完成建置並通過驗證之料架</td><td class="num">3 座</td></tr>
+        <tr><td>應用系統功能</td><td>完成開發並通過驗收之功能畫面</td><td class="num">13 項</td></tr>
+        <tr><td>技術驗證數據</td><td>帳料一致性、燈號正確性與作業效率之量測報告</td><td class="num">1 份</td></tr>
+        <tr><td>場域試運行</td><td>實際場域連續運行</td><td class="num">≥ 3 週</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="flag">
+      <span class="ft">效益基線之前置作業</span>
+      <p>效益基線須於系統導入前完成量測，包括：單筆領用之儲位查找時間、單次盤點之投入工時、現行帳料差異率、逾效期報廢金額。上述數據若未於系統進場前取得，將無可資比較之基準。</p>
+      <p>本項作業成本低，建議於計畫核定後即向場域單位提出。</p>
+    </div>
+
+    <h3 id="s2-2">2、技術發展目標</h3>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>技術項目</th><th>現況</th><th>本年度目標</th><th>驗證方式</th></tr></thead>
+      <tbody>
+        <tr><td>帳料一致性</td><td>依人工登錄，差異率未量測</td><td>盤點差異率 ≤ 0.5%</td><td>試運行期間全盤盤點比對</td></tr>
+        <tr><td>燈號指引正確率</td><td>尚未建立</td><td>儲位與 LED 索引對應正確率 100%</td><td>全儲位逐一驗證</td></tr>
+        <tr><td>燈號辨識性</td><td>尚未建立</td><td>相鄰儲位燈號誤認率 0%</td><td>全料架相鄰儲位辨識測試</td></tr>
+        <tr><td>掃描確認攔阻率</td><td>尚未建立</td><td>刻意構造之取放錯誤，攔阻率 100%</td><td>注入錯誤之情境測試</td></tr>
+        <tr><td>效期派工正確率</td><td>依人工目視挑選</td><td>依效期先出（FEFO）派工正確率 100%</td><td>多效期批次之派工測試</td></tr>
+        <tr><td>動態儲位指派</td><td>採固定儲位，依人員記憶</td><td>入庫儲位自動指派成功率 ≥ 99%</td><td>連續入庫作業測試</td></tr>
+        <tr><td>多筆任務閉環</td><td>尚未建立</td><td>逐筆點亮、確認後熄滅並推進，序列正確率 100%</td><td>多品項領用單測試</td></tr>
+        <tr><td>通訊可靠度</td><td>尚未建立</td><td>燈號指令端到端延遲 ≤ 300 ms；指令送達率 ≥ 99.9%</td><td>連續 1,000 筆指令測試</td></tr>
+        <tr><td>離線容錯</td><td>尚未建立</td><td>斷線 4 小時內作業不中斷，復線後補傳成功率 100%</td><td>斷線注入測試</td></tr>
+        <tr><td>系統可用率</td><td>尚未建立</td><td>試運行期間 ≥ 99.5%</td><td>試運行期間監控</td></tr>
+        <tr><td>作業效率</td><td>依基線量測值</td><td>單筆出庫作業時間（含查找、取放、確認）較基線縮短 ≥ 40%</td><td>作業計時比對</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p class="subhead">目標值之訂定依據</p>
+    <p>本計畫以<strong>帳料一致率</strong>而非揀貨速度作為首要指標。取放與登錄之誤差不易當場察覺，其影響並非單次事件，而是隨交易次數持續累積，且僅能藉由盤點歸零。設每週交易量為 V、單筆作業錯誤率為 p、盤點週期為 T 週，則：</p>
+    <p style="font-family:var(--mono);font-size:13px;background:var(--rule-soft);padding:12px 14px;margin-bottom:15px">盤點前最大偏差 = V × p × T　　時間平均偏差 = V × p × T ÷ 2</p>
+    <p>偏差量與 p 及 T 均成正比。提高盤點頻率（縮短 T）可壓低偏差，惟盤點須中斷正常作業並全面清點，其代價隨庫存規模上升；降低單筆錯誤率（縮小 p）則同時降低偏差並允許延長盤點週期。本系統以燈號指引降低取放錯誤、以掃描確認阻斷未經核對之過帳，其效益即在於後者。前頁互動圖為此一關係之示意。</p>
+    <p>其次，<strong>掃描確認為過帳之前置條件</strong>：確認不符者回報差異並保留原帳，不予過帳。此一設計使帳務僅反映經核對之交易，未確認之作業不致污染庫存資料。</p>
+
+    <p class="subhead">驗證協定要求</p>
+    <ul>
+      <li>取放錯誤情境須<strong>刻意構造</strong>，涵蓋錯誤儲位、錯誤品項、錯誤數量與錯誤效期批次四類，分別統計攔阻率。</li>
+      <li>燈號辨識性測試須涵蓋<strong>全部相鄰儲位組合</strong>，並於實際照明條件與作業視角下執行，不以單點測試代表。</li>
+      <li>帳料一致性須以<strong>全盤盤點</strong>比對，不採抽盤推估。</li>
+      <li>作業效率須與導入前基線比對，且由同一批作業人員執行，以排除熟練度差異。</li>
+    </ul>
+
+    <div class="flag">
+      <span class="ft">目標未達成之處置</span>
+      <p>若帳料一致性未達目標，須先辨識差異來源屬作業面（未掃描確認即取放）或系統面（過帳邏輯或斷線補傳缺失），不得逕以縮短盤點週期作為替代方案。</p>
+      <p>若動態儲位指派之作業接受度不佳，得於次期改採分區固定、區內動態之折衷配置，惟須於報告中載明其對空間利用率之影響。</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="sec">（三）</span>實施策略／方法</h2>
+    <p class="lede">本節說明各工作項目之實施方法。關鍵技術策略部分同時列出所評估之替代方案及其取捨依據。</p>
+
+    <h3>1、關鍵技術策略</h3>
+    <div class="decisions">
+      <div class="dec">
+        <div class="dk">策略 A</div>
+        <h4>採動態儲位指派，不採固定儲位</h4>
+        <p>入庫時由系統依空位狀況、品項屬性與效期指派儲位，不為各品項預留固定位置。</p>
+        <p>固定儲位之存在理由是<strong>便於人員記憶</strong>，其代價為空間利用率低（空位無法被其他品項使用）與效期批次分散管理不易。燈號導引使記憶負擔消失，此一代價即無須繼續承擔。動態儲位同時使同品項不同效期得以分別存放於不同儲位，為效期派工提供實作基礎。</p>
+        <div class="versus">替代方案評估：<b>固定儲位</b>——系統不可用時仍可依標示查找，惟空間利用率低，且同儲位混放多效期批次將使燈號無法指向正確批次。</div>
+      </div>
+      <div class="dec">
+        <div class="dk">策略 B</div>
+        <h4>以掃描確認取代確認按鈕</h4>
+        <p>本系統不於儲位設置揀取確認按鈕，改以手持式 QR Reader 掃描標籤作為確認方式。</p>
+        <p>確認按鈕僅能證明「有人按下該儲位之按鈕」，無法證明所取品項正確；掃描標籤則可確認<strong>實際取放之單品識別碼</strong>與任務內容相符。此一差異在效期批次管理上尤為關鍵——按鈕無從區分同儲位之不同效期批次。</p>
+        <div class="versus">替代方案評估：<b>儲位設置確認按鈕</b>——現場佈線與按鈕數量增加，確認強度亦較低。</div>
+      </div>
+      <div class="dec">
+        <div class="dk">策略 C</div>
+        <h4>出庫派工依效期優先，不依入庫順序</h4>
+        <p>出庫任務之儲位指派依<strong>效期最近者優先（FEFO）</strong>，而非入庫先後順序（FIFO），並由燈號直接指向該儲位。</p>
+        <p>試劑與藥品之管理目標為降低逾效期報廢，入庫順序與效期順序未必一致（例如後入庫之品項效期較短）。效期欄位須於 A3 品項主檔與 B1 入庫標籤資料中同時建立，作為派工依據。</p>
+        <div class="versus">替代方案評估：<b>依入庫順序派工</b>——實作較簡單，惟無法達成降低逾效期報廢之目標。</div>
+      </div>
+      <div class="dec">
+        <div class="dk">策略 D</div>
+        <h4>燈號逐筆閉環，不採整單全亮</h4>
+        <p>多品項任務採序列化處理：一次僅點亮當前一筆之目標儲位，掃描確認後該燈熄滅並自動推進至下一筆，形成<strong>指引與確認之閉環</strong>。</p>
+        <p>整單全亮雖可縮短作業時間，惟人員須自行判斷取放順序與對應關係，漏揀與錯配之風險上升，且發生錯誤時無從判定係哪一筆出錯。逐筆閉環使每一次燈號都有明確對應之確認動作，作業紀錄亦得以逐筆對應。</p>
+        <div class="versus">替代方案評估：<b>整單全亮</b>——作業時間較短，惟錯誤無法逐筆歸因，與本計畫以帳料一致性為首要指標之定位不符。</div>
+      </div>
+    </div>
+
+    <h3>2、料架與燈號硬體（WP2）</h3>
+    <ul>
+      <li><strong>燈號解析度：</strong>採可定址式 RGB 燈條，每一儲位對應固定之 LED 索引區段。相鄰儲位間須以實體分隔件或遮光片區隔，避免光線外溢造成誤認。</li>
+      <li><strong>亮度與視角：</strong>料架層高不一，人員於最上層與最下層之觀察角度差異大。亮度、燈條安裝角度與導光方式須於現場實測後定案，並以相鄰儲位辨識測試驗收。</li>
+      <li><strong>電控箱與布線：</strong>電控箱內含微控器、電源供應器與通訊模組，線路採集中佈設並保留維護空間；燈條與線材選型須考量現場環境條件。</li>
+      <li><strong>可擴充性：</strong>燈條定址與電控介面須預留擴充能力，使後續增加料架時不需更換主控架構。</li>
+    </ul>
+
+    <h3>3、燈號指引邏輯（WP3／WP5）</h3>
+    <ul>
+      <li><strong>顏色編碼：</strong>入庫、出庫、盤點與異常各採不同顏色。顏色定義須固定且全系統一致，避免同一顏色在不同作業下代表不同意義。</li>
+      <li><strong>閃爍模式：</strong>以恆亮表示目標儲位、閃爍表示需注意（如效期最近批次或差異儲位），模式數量控制在三種以內，避免辨識負擔。</li>
+      <li><strong>閉環推進：</strong>掃描確認相符後該儲位燈號熄滅並點亮下一筆；不符者該燈轉為異常色並保持點亮，直至處理完成。</li>
+      <li><strong>逾時處理：</strong>燈號點亮後逾一定時間未完成確認，系統發出提示並可取消該筆任務，避免燈號長期點亮造成誤導。</li>
+      <li><strong>多人同時作業（選配）：</strong>兩人以上同時作業時，須以任務分區或人員專屬顏色避免燈號混淆。本期列為選配驗證項目，其必要性依場域實際作業型態決定。</li>
+      <li><strong>盤點輔助：</strong>盤點作業以燈號逐區指引清點範圍，避免重複或遺漏，此為燈號系統相較純掃描方案之附加效益。</li>
+    </ul>
+
+    <h3>4、韌體與通訊（WP3）</h3>
+    <ul>
+      <li><strong>指令集設計：</strong>MQTT 主題結構依料架與層別分層，指令內容包含儲位、顏色、閃爍模式與逾時時間。</li>
+      <li><strong>送達確認：</strong>燈號指令須有回報機制，未收到回報者重送並記錄。指令送達率為本期驗證指標之一。</li>
+      <li><strong>離線容錯：</strong>連線中斷時，微控器維持已下發任務之燈號狀態；平板端作業紀錄暫存於本機，復線後自動補傳，補傳失敗須告警。作業不得因網路狀況中斷。</li>
+      <li><strong>斷電復歸：</strong>復電後燈號全數熄滅並回報狀態，不得沿用斷電前之殘留狀態，避免指引錯誤儲位。</li>
+    </ul>
+
+    <h3>5、伺服器與資料模型（WP4）</h3>
+    <ul>
+      <li><strong>單品級資料模型：</strong>以單品識別碼為主鍵，關聯品項主檔、批號、效期、儲位與交易紀錄，為追溯功能之基礎。</li>
+      <li><strong>儲位與 LED 索引之對應：</strong>由 A4 儲位設定維護，屬系統關鍵組態。任何料架異動須同步更新，並具備全儲位逐一驗證功能。</li>
+      <li><strong>儲位指派規則：</strong>動態指派須考量空位狀況、品項體積與存取頻率，高頻品項優先配置於易取層位，其規則須可組態而非寫死於程式。</li>
+      <li><strong>交易紀錄不可竄改：</strong>入庫、出庫與盤點調整均以追加方式記錄，修正以沖銷分錄處理，不直接覆寫原紀錄。</li>
+      <li><strong>備份機制：</strong>資料庫每日自動備份，並須實際驗證還原程序，不以備份檔存在作為完成標準。</li>
+    </ul>
+
+    <h3>6、應用系統與作業流程（WP5）</h3>
+    <p>畫面流程採三層結構：進入系統後為登入畫面，登入成功後進入選單畫面，再由選單進入各功能畫面；各功能畫面均設返回鍵回到選單。具資料維護性質之畫面（A1、A2、A3、A4、B1、C1）具備新增、刪除與修改功能。</p>
+    <ul>
+      <li><strong>入庫流程（B）：</strong>建立入庫標籤資料（含批號與效期）、列印並貼附標籤、系統動態指派儲位並點亮燈號、掃描確認、過帳。</li>
+      <li><strong>出庫流程（C）：</strong>建立領用單、列印領用標籤、系統依效期順序逐筆指派儲位並點亮燈號、掃描確認、閉環推進至下一筆、全數完成後過帳。</li>
+      <li><strong>盤點流程（D3）：</strong>以燈號逐區指引盤點範圍，掃描實際存放品項，系統自動比對並產生差異清單；差異調整須具權限並留存原因。</li>
+      <li><strong>查詢功能（D1、D2）：</strong>領用軌跡可依人員、品項與期間查詢；庫存查詢須呈現即時數量、效期分布與儲位分布，並提供效期預警清單。</li>
+      <li><strong>權限控管（A2）：</strong>依模組與作業別設定，差異調整、資料刪除與權限維護等作業須限定角色，並全數留存操作軌跡。</li>
+      <li><strong>系統不可用時之備援作業：</strong>採動態儲位後，人員無法依記憶查找，故須提供儲位對照清單之離線列印功能，並定義系統中斷時之紙本作業與事後補登程序。此為動態儲位之必要配套。</li>
+    </ul>
+
+    <h3>7、標籤與掃描確認（WP6）</h3>
+    <ul>
+      <li><strong>編碼規則：</strong>QR 內容以單品識別碼為主，品名、批號與效期等資訊由資料庫查得，避免標籤內容過長影響列印品質與掃描速度。</li>
+      <li><strong>標籤材質與尺寸：</strong>須配合品項包裝面積，並確保貼附後不遮蔽原廠標示；材質須耐受現場環境條件。</li>
+      <li><strong>掃描異常處理：</strong>掃描不到、掃描到非本次任務品項、重複掃描等情況須有明確回應與處置流程，不得靜默略過。</li>
+      <li><strong>儲位標示備援：</strong>各儲位標示可讀之儲位碼，於標籤損毀或掃描失效時作為手動確認依據。</li>
+    </ul>
+
+    <h3>8、風險與因應措施</h3>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>風險項目</th><th>成因</th><th>因應措施</th></tr></thead>
+      <tbody>
+        <tr><td><strong>人員略過掃描確認直接取放</strong></td><td>作業習慣或急用情境</td><td>未確認之交易不予過帳，差異將於盤點顯現；試運行期間須統計未確認交易比率並納入報告；必要時於流程設計上增加提示</td></tr>
+        <tr><td><strong>儲位與 LED 索引對應錯誤</strong></td><td>料架異動或組態未同步</td><td>提供全儲位逐一驗證功能；組態異動須經權限控管並留存紀錄；每次料架調整後強制重新驗證</td></tr>
+        <tr><td><strong>相鄰儲位燈號誤認</strong></td><td>光線外溢、視角差異、料架層高不一</td><td>實體分隔件或遮光片；現場實測定案亮度與角度；以全部相鄰儲位組合測試驗收</td></tr>
+        <tr><td><strong>系統不可用時無法作業</strong></td><td>動態儲位使人員無法依記憶查找</td><td>提供儲位對照清單離線列印；定義紙本備援作業與事後補登程序；儲位標示可讀儲位碼</td></tr>
+        <tr><td>多人同時作業之燈號混淆</td><td>同時點亮多筆任務燈號</td><td>採任務分區或人員專屬顏色；本期先確認場域實際作業型態，再決定是否納入驗證</td></tr>
+        <tr><td>通訊中斷導致燈號不同步</td><td>網路或 Broker 異常</td><td>指令回報與重送機制；離線容錯與復線補傳；斷電後燈號強制歸零</td></tr>
+        <tr><td>標籤脫落或無法判讀</td><td>貼附面積不足、材質不適用</td><td>依品項包裝選定材質與尺寸；儲位碼手動輸入作為備援；試運行期間統計掃描失敗率</td></tr>
+        <tr><td>盤點差異無法歸因</td><td>交易紀錄不足以回溯</td><td>交易紀錄採追加式；領用紀錄保留人員、時間與單品識別碼；差異調整須填具原因</td></tr>
+        <tr><td>場域安裝時程受限</td><td>庫房為運作中設施，停機窗口有限</td><td>燈號模組於現場外預組後再行安裝，縮短現場工時；安裝分階段進行，逐座料架切換</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="sec">（四）</span>預定進度及查核點</h2>
+
+    <h3 id="s4-1">1、預定進度</h3>
+    <p>本期為十六週，含七項工作項目、十一個查核點。各工作項目設 1 至 2 個查核點，工作量較小者設 1 個。WP7 之現場安裝與場域試運行須配合場域停機窗口，為全案關鍵路徑。</p>
+    <div class="gwrap"><div class="gantt w16"><div class="grow head"><div class="glabel">工作項目</div><div class="gcell">W1</div><div class="gcell">W2</div><div class="gcell">W3</div><div class="gcell">W4</div><div class="gcell">W5</div><div class="gcell">W6</div><div class="gcell">W7</div><div class="gcell">W8</div><div class="gcell">W9</div><div class="gcell">W10</div><div class="gcell">W11</div><div class="gcell">W12</div><div class="gcell">W13</div><div class="gcell">W14</div><div class="gcell">W15</div><div class="gcell">W16</div></div><div class="grow"><div class="glabel">WP1 系統規格與介面定義</div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>CP1-1</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div></div><div class="grow"><div class="glabel">WP2 料架與燈號硬體</div><div class="gcell"></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>CP2-1</span></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>CP2-2</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div></div><div class="grow"><div class="glabel">WP3 韌體與燈號控制</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>CP3-1</span></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>CP3-2</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div></div><div class="grow"><div class="glabel">WP4 伺服器與資料庫</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>CP4-1</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div></div><div class="grow"><div class="glabel">WP5 應用系統開發</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>CP5-1</span></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>CP5-2</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div></div><div class="grow"><div class="glabel">WP6 標籤與掃描整合</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>CP6-1</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div></div><div class="grow"><div class="glabel">WP7-1 系統整合與現場安裝</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>CP7-1</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div></div><div class="grow"><div class="glabel">WP7-2 場域試運行與指標量測</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gbar soft"></div></div><div class="gcell"><div class="gbar soft"></div></div><div class="gcell"><div class="gbar soft"></div></div><div class="gcell"><div class="gbar soft"></div></div><div class="gcell"><div class="gbar soft"></div><div class="gmark"><span>CP7-2</span></div></div></div></div></div>
+    <div class="gantt-key">
+      <span><i style="background:var(--verify)"></i>主要工作</span>
+      <span><i style="background:#9FB4CE"></i>場域試運行</span>
+      <span><i style="background:var(--halt)"></i>查核點</span>
+    </div>
+    <p style="font-size:14px;color:var(--graphite)">關鍵路徑風險集中於 W1 至 W3 之規格凍結，以及 W10 起之現場安裝。儲位規劃、作業型態（單人或多人並行）與布線路徑三項須於 CP1-1 前確認，其結果將影響硬體選型與軟體邏輯，後續變更成本高。</p>
+
+    <h3 id="s4-2">2、預定查核點說明</h3>
+    <p>各查核點之查核內容均以可量測之通過標準表達；未達成者應於該查核點提報範圍或期程調整方案。</p>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>查核點</th><th>工作項目</th><th>完成週次</th><th>查核內容與通過標準</th></tr></thead>
+      <tbody>
+        <tr><td class="num">CP1-1</td><td>WP1</td><td class="num">W3</td><td>完成系統規格書，內容含儲位編碼與 LED 索引規劃、儲位指派規則、資料模型、通訊協定、畫面規格與標籤格式。通訊鏈路完成現場實測。儲位數、作業型態與布線路徑三項條件確認並經場域簽認。長料件完成下單。</td></tr>
+        <tr><td class="num">CP2-1</td><td>WP2</td><td class="num">W5</td><td>燈號模組首件完成。單一料架完成燈條配置與定址，全儲位逐一點亮驗證，儲位與 LED 索引對應正確率 100%；相鄰儲位辨識測試無誤認。</td></tr>
+        <tr><td class="num">CP2-2</td><td>WP2</td><td class="num">W8</td><td>三座料架燈號模組完成，電控箱組立與布線完成。亮度、安裝角度與遮光配置經現場實測定案，全部相鄰儲位組合辨識測試通過。</td></tr>
+        <tr><td class="num">CP3-1</td><td>WP3</td><td class="num">W6</td><td>MQTT 指令集與燈號驅動完成。指令端到端延遲 ≤ 300 ms；連續 1,000 筆指令送達率 ≥ 99.9%；顏色與閃爍模式定義完成。</td></tr>
+        <tr><td class="num">CP3-2</td><td>WP3</td><td class="num">W9</td><td>閉環控制、離線容錯與斷電復歸完成。逐筆點亮與熄滅推進序列正確率 100%；斷線 4 小時內作業不中斷、復線後補傳成功率 100%；復電後燈號全數熄滅並回報狀態。</td></tr>
+        <tr><td class="num">CP4-1</td><td>WP4</td><td class="num">W7</td><td>伺服器與資料庫部署完成。單品級資料模型建立、儲位指派規則可組態、交易紀錄採追加式、權限控管生效、備份還原程序完成實測。</td></tr>
+        <tr><td class="num">CP5-1</td><td>WP5</td><td class="num">W10</td><td>B 入庫管理與 C 出庫管理模組完成。入庫儲位自動指派成功率 ≥ 99%；出庫依效期優先派工正確率 100%；多品項領用單閉環推進正確。</td></tr>
+        <tr><td class="num">CP5-2</td><td>WP5</td><td class="num">W12</td><td>A 基本資料建立與 D 物料盤點模組完成，13 項功能畫面全數通過內部驗收。盤點差異清單產製、差異調整權限、效期預警清單與離線儲位對照列印完成驗證。</td></tr>
+        <tr><td class="num">CP6-1</td><td>WP6</td><td class="num">W11</td><td>標籤產製與掃描確認流程完成。刻意構造之錯誤儲位、錯誤品項、錯誤數量、錯誤效期批次四類情境，攔阻率 100%；掃描異常處置流程完成驗證。</td></tr>
+        <tr><td class="num">CP7-1</td><td>WP7</td><td class="num">W13</td><td>系統整合與現場安裝完成。五節點全流程於實際料架上串接運行，全儲位燈號指引正確率 100%，多筆任務閉環驗證通過。</td></tr>
+        <tr><td class="num">CP7-2</td><td>WP7</td><td class="num">W16</td><td>場域試運行完成。連續運行 ≥ 3 週，系統可用率 ≥ 99.5%；全盤盤點差異率 ≤ 0.5%；單筆出庫作業時間較基線縮短 ≥ 40%。結案報告、技術文件與操作手冊完成。</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<div class="wrap">
+  <footer>
+    <span>醫療冰庫電子燈號揀貨與帳料管理系統 · 建置計畫書 v0.3</span>
+    <span>本版聚焦燈號導引與帳料管理 · 十六週</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var perr=document.getElementById('perr'),cyc=document.getElementById('cyc');
+  var oPerr=document.getElementById('oPerr'),oCyc=document.getElementById('oCyc');
+  var vMax=document.getElementById('vMax'),vAvg=document.getElementById('vAvg'),vCnt=document.getElementById('vCnt');
+  var saw=document.getElementById('saw'),thr=document.getElementById('thr'),thrLbl=document.getElementById('thrLbl');
+
+  var V=300, WEEKS=52, YMAX=110, LIMIT=10;
+  var PX0=52,PX1=692,BASE=190,TOP=24;
+
+  function sx(w){return PX0+(w/WEEKS)*(PX1-PX0);}
+  function sy(v){var y=BASE-(v/YMAX)*(BASE-TOP);return y<TOP?TOP:y;}
+
+  function update(){
+    var p=parseFloat(perr.value), T=parseInt(cyc.value,10);
+    oPerr.textContent=(p*100).toFixed(1)+'%';
+    oCyc.textContent=T+' 週';
+
+    var peak=V*p*T;
+    var d='M'+sx(0).toFixed(1)+' '+sy(0).toFixed(1);
+    for(var t0=0;t0<WEEKS;t0+=T){
+      var end=Math.min(t0+T,WEEKS);
+      var val=peak*(end-t0)/T;
+      d+='L'+sx(end).toFixed(1)+' '+sy(val).toFixed(1);
+      if(end<WEEKS) d+='L'+sx(end).toFixed(1)+' '+sy(0).toFixed(1);
+    }
+    d+='L'+sx(WEEKS).toFixed(1)+' '+BASE+'L'+sx(0).toFixed(1)+' '+BASE+'Z';
+    saw.setAttribute('d',d);
+
+    var ly=sy(LIMIT);
+    thr.setAttribute('y1',ly); thr.setAttribute('y2',ly);
+    thrLbl.setAttribute('y',(ly-6).toFixed(1));
+
+    vMax.textContent=peak.toFixed(peak<10?1:0)+' 筆';
+    vAvg.textContent=(peak/2).toFixed(peak/2<10?1:0)+' 筆';
+    vCnt.textContent=Math.floor(WEEKS/T)+' 次';
+  }
+  perr.addEventListener('input',update);
+  cyc.addEventListener('input',update);
+  update();
+})();
+</script>
+</body>
+</html>

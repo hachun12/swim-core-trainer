@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智慧藥櫃 掃單／導引揀選／批次核驗 — POC 計畫書 v0.3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lightbox:#EEF1F4;
+  --paper:#FFFFFF;
+  --ink:#13171B;
+  --graphite:#5C666F;
+  --rule:#D2D9DF;
+  --rule-soft:#E4E9ED;
+  --verify:#1B4D8F;
+  --halt:#A81E28;
+  --hold:#8A6A12;
+  --mono:"IBM Plex Mono","Roboto Mono",ui-monospace,monospace;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--lightbox);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+
+.masthead{border-bottom:1px solid var(--rule)}
+.mast-inner{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding:18px 0;flex-wrap:wrap}
+.mark{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--graphite)}
+.mark b{color:var(--ink);font-weight:600}
+.meta{font-family:var(--mono);font-size:11px;color:var(--graphite);letter-spacing:.06em}
+
+.hero{padding:72px 0 6px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--verify);margin-bottom:22px}
+h1{font-weight:900;font-size:clamp(31px,5.2vw,55px);line-height:1.13;letter-spacing:-.02em;margin:0 0 26px;max-width:20ch}
+h1 em{font-style:normal;display:block;color:var(--graphite);font-weight:500;font-size:.45em;letter-spacing:0;line-height:1.6;margin-top:20px;max-width:46ch}
+.thesis{max-width:60ch;font-size:17px;border-left:2px solid var(--ink);padding-left:20px;margin:0 0 50px}
+
+/* flow chain */
+.chain{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin:0 0 12px}
+.node{background:var(--paper);padding:20px 18px 22px;position:relative}
+.node .ni{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--verify);margin-bottom:9px}
+.node h4{margin:0 0 7px;font-size:15px;font-weight:700;letter-spacing:-.005em}
+.node p{margin:0;font-size:13px;color:var(--graphite);line-height:1.6}
+.node.terminal{background:#F7F9FB}
+.node .bar{position:absolute;left:0;right:0;bottom:0;height:3px}
+.chain-key{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;color:var(--graphite);text-transform:uppercase;margin-bottom:38px}
+
+/* instrument */
+.instrument{background:var(--paper);border:1px solid var(--rule);padding:30px 30px 26px;margin-bottom:16px}
+.inst-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+.inst-title{font-weight:700;font-size:17px;margin:0}
+.inst-note{font-family:var(--mono);font-size:10.5px;color:var(--graphite);letter-spacing:.08em;text-transform:uppercase}
+.inst-sub{color:var(--graphite);font-size:14px;margin:6px 0 22px;max-width:64ch}
+svg.plot{width:100%;height:auto;display:block}
+.ctrl{margin-top:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ctrl label{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--graphite);white-space:nowrap;min-width:96px}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:180px;height:2px;background:var(--rule);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--paper);border:2px solid var(--verify);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--paper);border:2px solid var(--verify);cursor:pointer}
+input[type=range]:focus-visible{outline:2px solid var(--verify);outline-offset:6px}
+.ctrl output{font-family:var(--mono);font-size:12px;min-width:38px;text-align:right}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:22px}
+.readout div{background:var(--paper);padding:16px 18px}
+.readout .rk{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--graphite);display:block;margin-bottom:6px}
+.readout .rv{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1}
+.readout .rd{font-size:12px;color:var(--graphite);margin-top:8px;line-height:1.5}
+.rv.far{color:var(--halt)} .rv.hold{color:var(--hold)} .rv.base{color:var(--verify)}
+
+.layout{display:grid;grid-template-columns:170px 1fr;gap:56px;padding:68px 0 30px;align-items:start}
+nav.toc{position:sticky;top:26px;font-family:var(--mono);font-size:11.5px;line-height:1.9;border-top:1px solid var(--ink);padding-top:12px}
+nav.toc a{display:block;color:var(--graphite);text-decoration:none;letter-spacing:.03em;padding:1px 0}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--ink)}
+nav.toc a .n{display:inline-block;width:30px;color:var(--rule)}
+main{min-width:0;max-width:74ch}
+
+section{padding-bottom:62px}
+h2{font-size:26px;font-weight:900;letter-spacing:-.015em;margin:0 0 6px;padding-top:14px;border-top:1px solid var(--ink)}
+h2 .sec{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--verify);letter-spacing:.14em;display:block;margin-bottom:12px}
+.lede{color:var(--graphite);font-size:15px;margin:10px 0 28px;max-width:58ch}
+h3{font-size:16.5px;font-weight:700;margin:32px 0 10px;letter-spacing:-.005em}
+p{margin:0 0 15px}
+ul{margin:0 0 16px;padding-left:0;list-style:none}
+ul li{position:relative;padding-left:20px;margin-bottom:9px}
+ul li::before{content:"";position:absolute;left:0;top:11px;width:7px;height:1px;background:var(--graphite)}
+code{font-family:var(--mono);font-size:.9em;background:var(--rule-soft);padding:1px 5px}
+
+.decisions{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);margin:24px 0 8px}
+.dec{background:var(--paper);padding:24px 26px}
+.dec .dk{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--verify);margin-bottom:10px}
+.dec h4{margin:0 0 10px;font-size:16px;font-weight:700}
+.dec p{margin:0;font-size:14.5px}
+.dec p + p{margin-top:10px}
+.versus{font-family:var(--mono);font-size:12px;color:var(--graphite);margin-top:12px;padding-top:11px;border-top:1px dashed var(--rule)}
+.versus b{color:var(--halt);font-weight:600}
+
+.pipe{border:1px solid var(--rule);background:var(--paper);margin:22px 0}
+.stage{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--rule-soft)}
+.stage:last-child{border-bottom:none}
+.stage .idx{font-family:var(--mono);font-size:12px;color:var(--verify);border-right:1px solid var(--rule-soft);display:flex;align-items:center;justify-content:center;background:#F7F9FB}
+.stage .body{padding:16px 20px}
+.stage h5{margin:0 0 5px;font-size:14.5px;font-weight:700}
+.stage p{margin:0;font-size:13.5px;color:var(--graphite);line-height:1.65}
+
+.tbl{width:100%;border-collapse:collapse;margin:20px 0 8px;font-size:14px}
+.tbl th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--graphite);font-weight:500;padding:0 14px 9px 0;border-bottom:1px solid var(--ink);white-space:nowrap}
+.tbl td{padding:13px 14px 13px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+.tbl td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:none}
+.scroller{overflow-x:auto;margin:0 -28px;padding:0 28px}
+
+.flag{border-left:2px solid var(--halt);padding:2px 0 2px 20px;margin:26px 0;font-size:14.5px}
+.flag .ft{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--halt);display:block;margin-bottom:7px}
+.flag p{margin:0}
+.flag p + p{margin-top:10px}
+
+.gates{margin:22px 0}
+.gaterow{display:grid;grid-template-columns:96px 1fr;gap:20px;padding:18px 0;border-bottom:1px solid var(--rule)}
+.gaterow:first-child{border-top:1px solid var(--rule)}
+.gaterow .when{font-family:var(--mono);font-size:12px;color:var(--verify);letter-spacing:.05em;padding-top:2px}
+.gaterow h5{margin:0 0 6px;font-size:15px;font-weight:700}
+.gaterow p{margin:0;font-size:13.8px;color:var(--graphite)}
+.gaterow .crit{margin-top:9px;font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--rule-soft);padding:8px 11px;line-height:1.6}
+
+footer{border-top:1px solid var(--ink);padding:26px 0 60px;font-family:var(--mono);font-size:11px;color:var(--graphite);letter-spacing:.06em;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;gap:0;padding-top:44px}
+  nav.toc{position:static;margin-bottom:44px;columns:2;column-gap:24px}
+  .readout,.chain{grid-template-columns:1fr}
+  .hero{padding-top:46px}
+  .instrument{padding:22px 18px}
+  .wrap{padding:0 20px}
+  .scroller{margin:0 -20px;padding:0 20px}
+  .ctrl label{min-width:0}
+}
+
+nav.toc a.sub{padding-left:30px;font-size:11px;color:#8A939B}
+nav.toc a.sub .n{width:16px}
+nav.toc a.top{margin-top:7px}
+.gantt{border:1px solid var(--rule);background:var(--paper);margin:22px 0 10px;font-size:12px;overflow:hidden}
+.grow{display:grid;grid-template-columns:190px repeat(16,1fr);border-bottom:1px solid var(--rule-soft)}
+.grow:last-child{border-bottom:none}
+.grow.head{border-bottom:1px solid var(--ink)}
+.gcell{border-right:1px solid var(--rule-soft);min-height:34px;position:relative}
+.gcell:last-child{border-right:none}
+.glabel{padding:9px 12px;border-right:1px solid var(--rule);display:flex;align-items:center;line-height:1.4;font-size:12.5px}
+.grow.head .glabel{background:#F7F9FB;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--graphite)}
+.grow.head .gcell{background:#F7F9FB;font-family:var(--mono);font-size:10px;color:var(--graphite);display:flex;align-items:center;justify-content:center;min-height:26px}
+.gbar{position:absolute;top:9px;bottom:9px;left:2px;right:2px;background:var(--verify)}
+.gbar.soft{background:#9FB4CE}
+.gmark{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--halt);transform:translateX(-1px)}
+.gmark span{position:absolute;top:5px;left:5px;font-family:var(--mono);font-size:9.5px;color:var(--halt);font-weight:600}
+.gantt-key{font-family:var(--mono);font-size:10.5px;color:var(--graphite);letter-spacing:.08em;text-transform:uppercase;display:flex;gap:20px;flex-wrap:wrap;margin-bottom:26px}
+.gantt-key i{display:inline-block;width:9px;height:9px;margin-right:6px;position:relative;top:1px}
+.gwrap{overflow-x:auto;margin:0 -28px;padding:0 28px}
+.gantt{min-width:760px}
+h3{scroll-margin-top:20px}
+.subhead{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--verify);margin:38px 0 -4px}
+@media(max-width:900px){nav.toc{columns:1}.gwrap{margin:0 -20px;padding:0 20px}}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap mast-inner">
+    <div class="mark"><b>智慧藥櫃 ADC</b> ／ 掃單導引揀選與批次核驗</div>
+    <div class="meta">POC 計畫書 · v0.5 · 2026-08-26 · 技術可行性驗證</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">技術可行性驗證 · 十六週</div>
+    <h1>以掃單導引揀選，<br>以視覺核驗放行。
+      <em>藥單掃描後解鎖對應抽屜，格位燈導引揀選；視覺系統核驗整批藥品之種類與數量無誤後，始解除派發。本計畫以十六週驗證此一流程之技術可行性，並量化其錯誤率。</em>
+    </h1>
+    <p class="thesis">本系統為<strong>串聯架構</strong>，任一節點之誤差將傳遞至下游並被後續步驟執行。驗證重點因此不僅在於各子系統之個別效能，更在於<strong>誤差於全鏈之累積行為</strong>。</p>
+  </div>
+
+  <div class="chain">
+    <div class="node"><div class="ni">01</div><h4>視覺掃單</h4><p>藥單置入掃描區，擷取病人、品項、劑量與數量欄位，經人員確認後鎖定。</p><div class="bar" style="background:var(--verify)"></div></div>
+    <div class="node"><div class="ni">02</div><h4>解鎖與導引</h4><p>依確認後之清單解鎖對應抽屜電子鎖，格位燈指示品項與應取數量。</p><div class="bar" style="background:var(--verify)"></div></div>
+    <div class="node"><div class="ni">03</div><h4>人員揀選</h4><p>護理人員取藥後，依燈號置入核驗托盤指定格位。抽屜開闔事件全程留存。</p><div class="bar" style="background:var(--verify)"></div></div>
+    <div class="node"><div class="ni">04</div><h4>批次核驗</h4><p>視覺一次擷取整盤影像，比對實際與期望之品項集合，逐項回報差異。</p><div class="bar" style="background:var(--hold)"></div></div>
+    <div class="node terminal"><div class="ni">05</div><h4>派發放行</h4><p>三態判定：通過者解除派發鎖；不符者回報差異並要求更正；信心不足者轉人工複核。</p><div class="bar" style="background:linear-gradient(90deg,var(--halt) 0 18%,var(--hold) 18% 40%,var(--verify) 40% 100%)"></div></div>
+  </div>
+  <div class="chain-key">串聯架構：任一節點之誤差將傳遞至下游節點</div>
+
+  <div class="instrument">
+    <div class="inst-head">
+      <h2 class="inst-title" style="border:none;padding:0;font-size:17px;font-weight:700">批次放大效應</h2>
+      <span class="inst-note">示意分布／非實測資料</span>
+    </div>
+    <p class="inst-sub">批次核驗之錯誤率並非單品核驗之線性累加。單一批次中任一個體判定錯誤而放行，該批次即為錯誤；任一個體信心不足，該批次即須複核。兩者均隨批量呈指數放大。</p>
+
+    <svg class="plot" viewBox="0 0 720 250" role="img" aria-label="個體相似度分數分布與判定門檻示意圖">
+      <defs><clipPath id="clipPlot"><rect x="52" y="14" width="640" height="176"/></clipPath></defs>
+      <g clip-path="url(#clipPlot)">
+        <rect id="bandHold" x="0" y="14" width="0" height="176" fill="#8A6A12" opacity="0.10"/>
+        <rect id="bandHalt" x="52" y="14" width="0" height="176" fill="#A81E28" opacity="0.07"/>
+        <path id="curveImp" fill="#A81E28" fill-opacity="0.13" stroke="#A81E28" stroke-width="1.4"/>
+        <path id="curveGen" fill="#1B4D8F" fill-opacity="0.13" stroke="#1B4D8F" stroke-width="1.4"/>
+        <line id="lineLo" y1="14" y2="190" stroke="#8A6A12" stroke-width="1.2" stroke-dasharray="4 3"/>
+        <line id="lineHi" y1="14" y2="190" stroke="#13171B" stroke-width="1.8"/>
+      </g>
+      <line x1="52" y1="190" x2="692" y2="190" stroke="#13171B" stroke-width="1"/>
+      <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#5C666F">
+        <text x="52" y="208" text-anchor="middle">0.2</text><text x="212" y="208" text-anchor="middle">0.4</text>
+        <text x="372" y="208" text-anchor="middle">0.6</text><text x="532" y="208" text-anchor="middle">0.8</text>
+        <text x="692" y="208" text-anchor="middle">1.0</text>
+        <text x="372" y="232" text-anchor="middle" letter-spacing="1.4">單一個體與其期望品項之相似度分數</text>
+        <text id="lblImp" y="42" fill="#A81E28" text-anchor="middle">非期望品項</text>
+        <text id="lblGen" y="42" fill="#1B4D8F" text-anchor="middle">期望品項</text>
+        <text id="lblHi" y="182" fill="#13171B" text-anchor="middle" font-weight="600"></text>
+      </g>
+    </svg>
+
+    <div class="ctrl">
+      <label for="thr">門檻嚴格度</label>
+      <input type="range" id="thr" min="0.62" max="0.80" step="0.005" value="0.72" aria-label="判定門檻">
+      <output id="oThr">0.72</output>
+    </div>
+    <div class="ctrl">
+      <label for="nb">單批品項數</label>
+      <input type="range" id="nb" min="2" max="14" step="1" value="8" aria-label="單批品項數">
+      <output id="oNb">8</output>
+    </div>
+
+    <div class="readout">
+      <div>
+        <span class="rk">批次誤放率</span>
+        <span class="rv far" id="vFar">—</span>
+        <p class="rd">整批含錯誤品項而獲放行。風險由病人承擔，為優先管控指標。</p>
+      </div>
+      <div>
+        <span class="rk">批次卡關率</span>
+        <span class="rv hold" id="vHold">—</span>
+        <p class="rd">整批正確卻遭攔阻或須複核。過高將影響使用者接受度。</p>
+      </div>
+      <div>
+        <span class="rk">個體誤放率</span>
+        <span class="rv base" id="vItem">—</span>
+        <p class="rd">單一個體之誤放機率。由批次目標倒推，須嚴格一個數量級。</p>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--graphite);margin:16px 0 0">提高判定門檻僅係將誤放轉換為卡關，實質改善須來自<strong>單體可分性之提升</strong>。分格托盤之位置先驗、抽屜開闔事件與燈號指示之應取數量，均可作為額外之獨立證據，其實施方式詳見（三）。</p>
+  </div>
+</div>
+
+<div class="wrap layout">
+  <nav class="toc" aria-label="章節目錄">
+    <a class="top" href="#s1"><span class="n">一</span>計畫架構</a>
+    <a class="top" href="#s2"><span class="n">二</span>計畫目標</a>
+    <a class="sub" href="#s2-1"><span class="n">1</span>里程碑目標</a>
+    <a class="sub" href="#s2-2"><span class="n">2</span>技術發展目標</a>
+    <a class="top" href="#s3"><span class="n">三</span>實施策略／方法</a>
+    <a class="top" href="#s4"><span class="n">四</span>預定進度及查核點</a>
+    <a class="sub" href="#s4-1"><span class="n">1</span>預定進度</a>
+    <a class="sub" href="#s4-2"><span class="n">2</span>查核點說明</a>
+  </nav>
+
+  <main>
+
+  <section id="s1">
+    <h2><span class="sec">（一）</span>計畫架構</h2>
+    <p class="lede">本節說明本計畫於給藥流程中之定位、技術路線之選擇依據、系統架構組成，以及工作項目之分解方式。</p>
+
+    <h3>1、計畫定位</h3>
+    <p>給藥錯誤之發生環節涵蓋處方、轉錄、調劑、備藥與給藥。本計畫不涉及前段環節，聚焦於<strong>備藥環節</strong>，即藥品自藥櫃取出至送達病床之間的作業區間。</p>
+    <p>現行作業於此環節主要依賴人工，攔阻機制為個人核對與雙人覆核。於人力緊縮之班別，雙人覆核之執行程度易受影響，且缺乏客觀紀錄可供事後查證。</p>
+    <p>攔阻時點亦直接影響更正成本。條碼給藥系統於床邊執行核對，此時藥品已完成備妥、人員已離開護理站，更正須折返重備。本計畫將攔阻時點<strong>前移至藥櫃端</strong>，於藥品離櫃前完成核對，更正範圍可限縮於單一格位。</p>
+
+    <h3>2、技術路線選擇</h3>
+    <p>本計畫採視覺方案作為核驗手段，其選擇依據如下表所示。</p>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>攔阻機制</th><th>攔阻時點</th><th>額外操作</th><th>散裝／剪開包裝</th><th>客觀證據</th></tr></thead>
+      <tbody>
+        <tr><td>人工雙人覆核</td><td>備藥時</td><td>需第二人在場</td><td>適用</td><td>僅簽名紀錄</td></tr>
+        <tr><td>條碼逐項掃描</td><td>備藥或床邊</td><td>每品項掃描一次</td><td>無條碼可掃</td><td>有</td></tr>
+        <tr><td>單品 RFID</td><td>備藥時</td><td>需逐件貼標</td><td>成本不具可行性</td><td>有</td></tr>
+        <tr><td><strong>批次視覺核驗</strong></td><td><strong>離櫃前</strong></td><td><strong>無</strong></td><td>適用（依外觀特徵）</td><td>影像與事件紀錄</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>視覺方案之主要優勢在於<strong>不增加操作步驟</strong>：人員原即須將藥品置放於托盤，置放動作同時完成核驗。條碼須逐品項掃描、RFID 須逐件貼標，均增加作業步驟，於高負荷時段之執行程度不易維持。</p>
+
+    <h3>3、系統架構</h3>
+    <p>全系統由四個子系統組成，對應前述流程之五個節點。</p>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>子系統</th><th>功能</th><th>關鍵技術</th><th>本期交付</th></tr></thead>
+      <tbody>
+        <tr><td><strong>SA 掃單擷取</strong></td><td>紙本藥單轉為結構化清單，經人工確認後鎖定</td><td>版面對位、模板欄位擷取、欄位級信心值</td><td>單一版型模組與確認介面</td></tr>
+        <tr><td><strong>SB 鎖控與導引</strong></td><td>依清單解鎖對應抽屜，燈號指示品項與應取數量</td><td>CAN 分散式鎖控、開闔到位偵測、雙色配對導引</td><td>24 格鎖控板組與導引韌體</td></tr>
+        <tr><td><strong>SC 視覺核驗站</strong></td><td>一次擷取整盤影像，判定各格位個體之種類與數量</td><td>受控光學、分格托盤、實例分割、註冊制嵌入辨識</td><td>核驗站治具與辨識模型</td></tr>
+        <tr><td><strong>SD 判定與留存</strong></td><td>多路證據融合、三態判定、差異回報、全鏈事件留存</td><td>證據融合規則、多重集合比對、可回溯紀錄</td><td>判定引擎與交易紀錄庫</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>4、工作項目分解</h3>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>工作項目</th><th>內容</th><th>對應子系統</th></tr></thead>
+      <tbody>
+        <tr><td class="num">WP1</td><td>系統規格與介面定義、藥單版型與品項清單確認、光學規格計算、規格凍結</td><td>全案</td></tr>
+        <tr><td class="num">WP2</td><td>核驗站光學與機構治具：分格托盤、背光與環形光模組、掃描壓板、自動採集台</td><td>SC</td></tr>
+        <tr><td class="num">WP3</td><td>鎖控與導引電控：24 格電子鎖驅動板、CAN 通訊、格位燈、開闔事件</td><td>SB</td></tr>
+        <tr><td class="num">WP4</td><td>掃單擷取模組：版面對位、模板欄位擷取、信心值、確認介面、清單合法性檢查</td><td>SA</td></tr>
+        <tr><td class="num">WP5-1</td><td>影像資料集建置：自動採集、標註管線、高相似對照組、批次情境資料</td><td>SC</td></tr>
+        <tr><td class="num">WP5-2</td><td>辨識模型與證據融合：分割計數、幾何量測、嵌入與註冊、四路融合、三態判定</td><td>SC／SD</td></tr>
+        <tr><td class="num">WP6</td><td>系統整合與驗證：五節點串接、邊緣部署、事件留存、情境測試、指標量測</td><td>全案</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>5、計畫範圍界定</h3>
+    <p><strong>本期執行範圍：</strong>單一版型藥單擷取；單櫃 24 格獨立鎖控與導引；核驗站治具一套；30 個品項之註冊與辨識；單批 2 至 10 品項之批次核驗；三態判定與差異回報；全鏈事件留存。</p>
+    <p><strong>本期不執行範圍：</strong>醫院資訊系統介接（採掃描紙本藥單之設計即為排除此一介接需求）；退藥、盤點與效期管理；開放式藥品辨識；手寫欄位辨識；量產設計、安規驗證與法規送審。</p>
+
+    <div class="flag">
+      <span class="ft">前提假設</span>
+      <p>本計畫假設病房備藥以<strong>具印刷面之個體</strong>為主，包括單劑量藥袋、鋁箔片、安瓿與小瓶。此類品項具文字資訊可供辨識，並可與條碼交叉驗證，十六週期程內可完成 30 個品項之驗證。</p>
+      <p>若實際備藥形態為<strong>散裝裸錠</strong>，可用特徵僅餘形狀、尺寸、顏色與刻痕，技術難度顯著提高。該情形下本期範圍應調整為 15 個品項之可行性探索，並將整批同時核驗改為逐件過站。此一前提須於第一週確認，其結果將影響本計畫之目標值與進度安排。</p>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="sec">（二）</span>計畫目標</h2>
+    <p class="lede">本期定位為技術可行性驗證，目標為完成流程串接並取得可量化之錯誤率數據，不含產品化工作。</p>
+
+    <h3 id="s2-1">1、本年度欲達成對產業影響之里程碑目標</h3>
+    <p><strong>里程碑目標：</strong>完成「掃單導引揀選結合批次視覺核驗」智慧藥櫃雛型系統，並完成量化技術驗證，取得足以支撐次期臨床試辦決策之實證數據。</p>
+
+    <div class="decisions">
+      <div class="dec">
+        <div class="dk">產業影響 一</div>
+        <h4>建立不依賴醫院資訊系統之技術路徑</h4>
+        <p>本計畫採掃描紙本藥單作為輸入來源，系統因此<strong>不需與特定醫院資訊系統介接</strong>。</p>
+        <p>對資訊系統建置程度較低、預算有限之中小型醫院及長照機構而言，此一特性可顯著降低導入門檻。國內此一區塊目前可用之解決方案有限。</p>
+      </div>
+      <div class="dec">
+        <div class="dk">產業影響 二</div>
+        <h4>形成可移轉之模組化技術能量</h4>
+        <p>本計畫產出之三項核心模組——<strong>受控光學核驗站</strong>、<strong>註冊制少樣本辨識</strong>、<strong>多路證據融合判定</strong>——所解決者為「多品項揀選後之批次正確性核驗」，其適用範圍不限於藥品。</p>
+        <p>同一技術可延伸應用於醫材包核對、產線 kitting 揀料驗證、耗材櫃管理等場域。本期於架構設計上即以子系統邊界明確、可獨立移轉為原則。</p>
+      </div>
+      <div class="dec">
+        <div class="dk">產業影響 三</div>
+        <h4>建立本土供應鏈切入點</h4>
+        <p>國內智慧藥櫃市場長期以整機進口為主，售價與維護成本較高，客製彈性亦受限。</p>
+        <p>本計畫將鎖控模組、光學治具與辨識演算法三段技術在地化，形成國內業者可承接之技術位置。</p>
+      </div>
+    </div>
+
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>里程碑項目</th><th>衡量方式</th><th>本年度達成</th></tr></thead>
+      <tbody>
+        <tr><td>雛型系統</td><td>五節點全鏈可運行之實體系統</td><td class="num">1 套</td></tr>
+        <tr><td>技術驗證數據</td><td>含 95% 信賴區間之量化指標報告</td><td class="num">1 份</td></tr>
+        <tr><td>可移轉模組</td><td>子系統介面文件與技術說明</td><td class="num">3 項</td></tr>
+        <tr><td>合作場域接觸</td><td>提供藥單版型與品項清單之合作單位</td><td class="num">≥ 1 家</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="flag">
+      <span class="ft">效益基線之前置作業</span>
+      <p>本期不進行臨床效益驗證，惟效益基線須於系統導入前完成量測，包括備藥耗時、每千次備藥之攔阻事件數，以及雙人覆核投入工時。上述數據若未於系統進場前取得，次期將無可資比較之基準。</p>
+      <p>本項作業成本低，建議於計畫核定後即向合作單位提出，不待系統開發完成。</p>
+    </div>
+
+    <h3 id="s2-2">2、技術發展目標</h3>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>技術項目</th><th>現況</th><th>本年度目標</th><th>驗證方式</th></tr></thead>
+      <tbody>
+        <tr><td>批次視覺核驗</td><td>尚未建立</td><td>30 品項、單批 2–10 品項，批次誤放率 ≤ 0.5%</td><td>含刻意構造錯誤之情境測試</td></tr>
+        <tr><td>格位辨識</td><td>尚未建立</td><td>個體誤放率 ≤ 0.05%、計數準確率 ≥ 99.5%</td><td>逐格離線與線上測試</td></tr>
+        <tr><td>註冊制少樣本辨識</td><td>尚未建立</td><td>新品項 15 分鐘內完成註冊，未參與訓練品項效能退化 ≤ 8 個百分點</td><td>5 品項泛化組獨立回報</td></tr>
+        <tr><td>掃單欄位擷取</td><td>尚未建立</td><td>欄位正確率 ≥ 99%，擷取錯誤時該欄位標示率 ≥ 90%</td><td>逐欄比對人工判讀</td></tr>
+        <tr><td>鎖控與導引</td><td>尚未建立</td><td>24 格獨立控制，解鎖集合正確率 100%</td><td>指令與開闔事件比對</td></tr>
+        <tr><td>多路證據融合</td><td>尚未建立</td><td>視覺、格位先驗、開闔事件、秤重四路融合，任兩路衝突即轉人工複核</td><td>注入單路錯誤之對抗測試</td></tr>
+        <tr><td>系統效率</td><td>尚未建立</td><td>單次交易（掃單至放行）第 95 百分位 ≤ 90 秒</td><td>情境測試計時</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p class="subhead">目標值之訂定依據</p>
+    <p>本計畫不採用「辨識準確率」作為目標指標。系統之兩類錯誤代價不對等：<strong>誤放</strong>為錯誤藥品獲得放行，風險由病人承擔；<strong>誤攔</strong>為正確藥品遭攔阻，代價為作業時間與使用者信任。合併為單一準確率將稀釋前者之權重，故本計畫將誤放率與卡關率分列，並以誤放率為優先管控指標。</p>
+    <p>其次，批次核驗之錯誤率並非單品核驗之線性累加。單一批次中任一個體判定錯誤而放行，該批次即為錯誤；任一個體信心不足，該批次即須複核。兩者均隨批量呈指數放大：</p>
+    <p style="font-family:var(--mono);font-size:13px;background:var(--rule-soft);padding:12px 14px;margin-bottom:15px">批次誤放率 = 1 − (1 − 個體誤放率)<sup>N</sup>　　批次卡關率 = 1 − (1 − 個體卡關率)<sup>N</sup></p>
+    <p>以單批 8 品項計，個體誤放率 0.5% 將放大為批次 3.9%。此即上表個體誤放率目標（≤ 0.05%）須較批次目標（≤ 0.5%）嚴格一個數量級之原因，亦為（三）策略 C 採多路證據融合之依據：提高判定門檻僅係將誤放轉換為卡關，實質改善須來自單體可分性之提升。前頁互動圖為此一關係之示意。</p>
+    <p>第三，判定輸出設計為<strong>通過／人工複核／攔阻</strong>三態，低信心情況不強制作出判斷。納入拒絕選項後，誤放率與誤攔率可同時降低，其代價轉移為可管理、可量測之卡關率指標。</p>
+
+    <p class="subhead">驗證協定要求</p>
+    <ul>
+      <li>錯誤情境須<strong>刻意構造</strong>，並以高相似對照組為主體。採隨機配對將使誤放率之量測結果失真。</li>
+      <li>錯誤類型分別統計：錯品項、漏取、多取、數量錯誤。四者成因與對策不同，合併統計無法辨識問題來源。</li>
+      <li>泛化組（5 個未參與訓練之品項）獨立回報，以呈現註冊制之實際效能。</li>
+      <li>所有指標須附 95% 信賴區間。驗證誤放率 ≤ 0.5% 所需之樣本數，應於測試計畫階段完成估算。</li>
+    </ul>
+
+    <div class="flag">
+      <span class="ft">目標未達成之處置</span>
+      <p>若本期結束時批次誤放率未達目標值，應將系統定位調整為<strong>輔助攔阻層</strong>：僅於高信心錯誤時執行攔阻，其餘情況回歸既有雙人覆核流程。此一定位仍具應用價值，惟須於結案報告中明確載明，不應以放寬判定門檻之方式達成指標。</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="sec">（三）</span>實施策略／方法</h2>
+    <p class="lede">本節說明各子系統之實施方法。關鍵技術策略部分同時列出所評估之替代方案及其取捨依據。</p>
+
+    <h3>1、關鍵技術策略</h3>
+    <div class="decisions">
+      <div class="dec">
+        <div class="dk">策略 A</div>
+        <h4>採分格托盤，不採自由平鋪</h4>
+        <p>核驗托盤採分格設計，格數對應本批品項數。抽屜解鎖時，托盤對應格位同步亮燈，人員取藥後置入指定格位。</p>
+        <p>此一設計將「混雜物件之實例分割」問題降維為「N 個已知位置之單物件驗證」，且各格位具備<strong>位置先驗</strong>資訊，即該格位之期望品項與期望數量。批次核驗之主要失效來源——遮擋與重疊——可因此排除。</p>
+        <div class="versus">替代方案評估：<b>自由平鋪任意擺放</b>——分割失敗、重疊遮擋與計數錯誤將顯著增加開發時程與結果不確定性。</div>
+      </div>
+      <div class="dec">
+        <div class="dk">策略 B</div>
+        <h4>掃單結果納入人工確認</h4>
+        <p>擷取結果以大字顯示，經人員確認後始解鎖抽屜，此步驟不予自動化。</p>
+        <p>掃單為串聯架構之起始節點。欄位擷取錯誤時，後續解鎖、揀選與核驗均以錯誤之期望值執行，核驗結果將顯示為通過，該錯誤無法由下游節點察覺。以單次人工確認阻斷此一傳遞路徑，成本低而效益明確。</p>
+        <div class="versus">替代方案評估：<b>掃單至解鎖全程自動</b>——所節省之作業時間有限，惟將產生下游無法察覺之錯誤來源。</div>
+      </div>
+      <div class="dec">
+        <div class="dk">策略 C</div>
+        <h4>採多路證據融合，不採單一視覺分數</h4>
+        <p>各格位之判定同時採用四路證據：視覺相似度、托盤格位先驗、該品項所屬抽屜之開闔事件、格位秤重差值。</p>
+        <p>當視覺判定為某品項，而該品項所屬抽屜於本次交易中未曾開啟時，此為錯藥之強證據，其優先級高於相似度數值。單一證據來源不足以支撐所訂之低誤放率目標；所增加之證據來源均為鎖控與導引子系統既有輸出，不增加額外硬體成本。</p>
+        <div class="versus">替代方案評估：<b>單一相似度門檻</b>——依前頁示意，於批量 8 以上難以同時滿足誤放率與卡關率目標。</div>
+      </div>
+    </div>
+
+    <h3>2、掃單子系統（SA）</h3>
+    <ul>
+      <li><strong>條碼優先。</strong>藥單如印有一維或二維條碼，直接讀取單號後由本機資料庫還原清單，文字辨識僅作交叉驗證。此為可靠度最高之路徑，須於第一週確認藥單是否具備條碼。</li>
+      <li><strong>版型模板擷取。</strong>無條碼時，以固定版型定義欄位框，先執行版面對位（四角定位標或邊框偵測），再逐欄辨識。本計畫不採用通用文件理解模型：於單一版型條件下，模板法在速度、正確率與可解釋性上均較具優勢，通用模型於本期期程內不易調校至所需之錯誤率水準。</li>
+      <li><strong>欄位級信心值。</strong>各欄位獨立輸出信心值，低信心欄位於確認畫面標示，以引導人員注意力。</li>
+      <li><strong>清單合法性檢查。</strong>擷取所得品項須存在於櫃內註冊清單，數量須在合理範圍，不符者即行攔阻，不進入解鎖程序。</li>
+      <li><strong>共用光學。</strong>藥單掃描區與核驗站共用同一組相機與光源，以模式切換區分，以符合本期之預算與工時限制。紙張翹曲與反光問題以壓板玻璃處理。</li>
+    </ul>
+
+    <h3>3、鎖控與導引子系統（SB）</h3>
+    <ul>
+      <li>24 格獨立電子鎖，主控板經 <strong>CAN bus</strong> 串接分散式驅動板。相較 RS-485，其雜訊耐受度與節點管理機制較為適用。</li>
+      <li>各格位具備<strong>開闔到位偵測</strong>，其目的除鎖控狀態確認外，主要用於留存「格位開啟時間」紀錄，供 SD 子系統融合使用。</li>
+      <li>格位燈採<strong>抽屜格位與托盤格位同色配對</strong>，以視覺導引取代文字判讀，降低搜尋負荷。</li>
+      <li><strong>解鎖策略：</strong>一次解鎖本批所需之全部格位，不採逐格依序解鎖。逐格解鎖雖較嚴謹，惟將延長作業時間，影響本系統之效率效益；正確性由後段核驗承擔。</li>
+      <li>如發生<strong>非本批格位遭開啟</strong>之情形，記錄為異常事件，並於核驗時強制轉人工複核，不因視覺判定全數通過而放行。</li>
+      <li>斷電時電子鎖維持鎖定狀態，並保留雙人保管之實體開鎖路徑。本期僅驗證機制存在性，不進行完整設計。</li>
+    </ul>
+
+    <h3>4、視覺核驗站（SC）</h3>
+    <p>核驗站為本期唯一須自製之關鍵硬體，其規格直接影響演算法之效能上限，須於第四週完成凍結。</p>
+    <ul>
+      <li><strong>俯視單相機涵蓋全盤。</strong>托盤尺寸與相機解析度須使各格位內物件達到辨識所需之空間解析度，此為光學規格計算之起點。</li>
+      <li><strong>背光層：</strong>托盤底部設置擴散背光，取得高對比輪廓，用於尺寸量測與個體計數。</li>
+      <li><strong>環形光層：</strong>取得顏色與印刷面內容，供文字辨識與外觀比對使用。</li>
+      <li><strong>內建色卡與尺標：</strong>設置於托盤固定角落，每次擷取同時入鏡，用於色彩還原與尺寸校正，並可監測光源老化所致之長期漂移。</li>
+      <li><strong>斜射光（選配）：</strong>如需處理裸錠刻痕，可加入多方向斜射光重建表面法向量。本期列為可行性探索項目，不納入主線交付。</li>
+    </ul>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>時序項目</th><th>目標</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td>擷取序列</td><td class="num">≤ 400 ms</td><td>背光與環形光各一張，全盤一次擷取</td></tr>
+        <tr><td>推論</td><td class="num">≤ 900 ms</td><td>批量 10 品項，於邊緣運算模組執行</td></tr>
+        <tr><td>核驗端到端</td><td class="num">≤ 1.5 s</td><td>托盤置入至結果顯示</td></tr>
+        <tr><td>掃單端到端</td><td class="num">≤ 2.0 s</td><td>藥單置入至確認畫面出現</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>5、批次比對與判定邏輯（SD）</h3>
+    <div class="pipe">
+      <div class="stage"><div class="idx">01</div><div class="body"><h5>托盤對位與品質閘</h5><p>依托盤定位標校正影像，切出各格位子影像，並檢查對焦、曝光與物件壓線狀況。品質不合格者要求重新置放，不進入辨識程序。</p></div></div>
+      <div class="stage"><div class="idx">02</div><div class="body"><h5>格內分割與計數</h5><p>以背光子影像執行實例分割，取得格內個體數與各自遮罩，數量於此階段判定。個體相疊時回報需重新攤平，不進行推估。</p></div></div>
+      <div class="stage"><div class="idx">03</div><div class="body"><h5>個體特徵擷取</h5><p>包含幾何量測（尺寸、形狀類別）及環形光影像之外觀嵌入；具印刷面者另行文字辨識，讀取品名與規格。</p></div></div>
+      <div class="stage"><div class="idx">04</div><div class="body"><h5>對期望品項驗證</h5><p>與該格位<strong>期望品項</strong>之註冊原型比對，輸出相似度；同時比對櫃內其他品項，如存在明顯更高相似度者，標記為疑似錯藥。</p></div></div>
+      <div class="stage"><div class="idx">05</div><div class="body"><h5>證據融合與格位判定</h5><p>相似度、格位先驗、抽屜開闔事件與秤重差值融合，輸出該格位三態結果。任兩路證據衝突時判定為人工複核。</p></div></div>
+      <div class="stage"><div class="idx">06</div><div class="body"><h5>批次結論與差異回報</h5><p>全數格位通過始予放行。任一格位攔阻則整批攔阻，並具體指出差異內容（例如「第 3 格位期望為 A×2，實得疑似 B×2」）。差異描述之精確度影響使用者接受度。</p></div></div>
+    </div>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>格位狀態組合</th><th>批次輸出</th></tr></thead>
+      <tbody>
+        <tr><td>全部格位通過</td><td>通過——解除派發鎖</td></tr>
+        <tr><td>任一格位攔阻</td><td>攔阻——指出該格差異，更正後重驗</td></tr>
+        <tr><td>無攔阻，惟有格位信心不足</td><td>人工複核——僅該格位需二次確認</td></tr>
+        <tr><td>視覺判定全數通過，惟有異常抽屜開闔</td><td>人工複核</td></tr>
+        <tr><td>格位為空但期望有藥</td><td>攔阻——漏取，指出品項</td></tr>
+        <tr><td>格位有藥但期望為空</td><td>攔阻——多取，指出格位</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>6、影像資料策略</h3>
+    <p>影像資料集建置為本期工作量最大之項目，其進度直接影響後段辨識模型之開發時程。</p>
+    <p><strong>自動化採集治具：</strong>須於第三週前完成可程控採集台，包含旋轉載台與程控光源，使單一品項於十分鐘內採得數百張涵蓋姿態、翻面與光照變異之影像並自動標註。人工拍攝單一品項約需一小時以上且品質不一致，30 個品項之採集時程差異約為五個工作天與一個月之別。本治具為資料集建置之關鍵前置，直接影響本期能否於期程內完成驗證。</p>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>用途</th><th>品項</th><th>影像量</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td>訓練與註冊</td><td class="num">25</td><td class="num">約 12,000</td><td>含 5 組高相似對照組</td></tr>
+        <tr><td>泛化驗證</td><td class="num">5</td><td class="num">約 2,000</td><td>不參與訓練，僅執行註冊流程，驗證新增品項之適用性</td></tr>
+        <tr><td>批次情境</td><td class="num">—</td><td class="num">約 600 盤</td><td>真實組合之整盤影像，含刻意構造之錯藥、漏取與多取情境</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="flag">
+      <span class="ft">資料集設計原則</span>
+      <p>資料集不應以易於辨識之品項為主體，須<strong>刻意加重高相似對照組</strong>之比重，包括同廠牌同外觀不同劑量、同色同形不同成分等組合。此類組合為臨床實務中錯誤發生率較高者，亦為視覺辨識最易失效者。以平均品項所量得之準確率，不足以評估系統之安全效能。</p>
+      <p>對照組之挑選須由具臨床背景之藥師執行。</p>
+    </div>
+
+    <h3>7、風險與因應措施</h3>
+    <div class="scroller">
+    <table class="tbl">
+      <thead><tr><th>風險項目</th><th>成因</th><th>因應措施</th></tr></thead>
+      <tbody>
+        <tr><td><strong>藥單版型與品項清單延遲取得</strong></td><td>非本團隊可控，且為 WP1 之前置條件</td><td>第一週即行接洽；備援方案為以公開藥品資料自建擬真版型，並於報告中載明其局限</td></tr>
+        <tr><td><strong>備藥形態為散裝裸錠</strong></td><td>與（一）之前提假設不符</td><td>G1 前完成確認；如成立，品項數調整為 15，改採逐件過站，並同步下修（二）之目標值</td></tr>
+        <tr><td><strong>掃單擷取錯誤而下游判定通過</strong></td><td>期望值本身錯誤，核驗結果顯示為通過</td><td>納入人工確認（策略 B）；欄位信心值標示；清單合法性檢查</td></tr>
+        <tr><td><strong>同廠牌不同劑量外觀高度相似</strong></td><td>僅規格數字有別</td><td>列為第一優先測試項目，以尺寸量測與印刷面文字判別；無法區分者強制轉人工複核並載入結案報告</td></tr>
+        <tr><td>人員置入錯誤托盤格位</td><td>燈號導引失效或操作習慣差異</td><td>格位先驗可直接觸發不符；差異回報須區分「置入錯誤格位」與「取用錯誤品項」，以維持使用者對判定結果之信任</td></tr>
+        <tr><td>格內個體相疊</td><td>分割失敗導致計數錯誤</td><td>回報需重新攤平，不進行推估；托盤格位深度設計避免堆疊</td></tr>
+        <tr><td>透明或高反光包裝</td><td>鏡面反射影響輪廓與文字辨識</td><td>評估偏光片；必要時該類品項改採條碼路徑</td></tr>
+        <tr><td>光源老化長期漂移</td><td>指標緩慢劣化而不易察覺</td><td>內建色卡每次校正；記錄校正殘差趨勢作為系統健康指標</td></tr>
+        <tr><td><strong>使用者發展規避行為</strong></td><td>卡關率或交易時間過高</td><td>列為第一優先風險；WP6 情境測試須觀察並記錄規避行為，載入結案報告</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="sec">（四）</span>預定進度及查核點</h2>
+
+    <h3 id="s4-1">1、預定進度</h3>
+    <p>本期為十六週，含七項工作項目與四個查核點。WP1 與 WP5-1 之啟動取決於藥單樣本、品項清單與實體藥品之取得，為全案關鍵路徑。</p>
+    <div class="gwrap"><div class="gantt"><div class="grow head"><div class="glabel">工作項目</div><div class="gcell">W1</div><div class="gcell">W2</div><div class="gcell">W3</div><div class="gcell">W4</div><div class="gcell">W5</div><div class="gcell">W6</div><div class="gcell">W7</div><div class="gcell">W8</div><div class="gcell">W9</div><div class="gcell">W10</div><div class="gcell">W11</div><div class="gcell">W12</div><div class="gcell">W13</div><div class="gcell">W14</div><div class="gcell">W15</div><div class="gcell">W16</div></div><div class="grow"><div class="glabel">WP1 系統規格與介面定義</div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>G1</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G2</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G3</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G4</span></div></div></div><div class="grow"><div class="glabel">WP2 核驗站光學與機構治具</div><div class="gcell"></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>G1</span></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>G2</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G3</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G4</span></div></div></div><div class="grow"><div class="glabel">WP3 鎖控與導引電控</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>G1</span></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>G2</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G3</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G4</span></div></div></div><div class="grow"><div class="glabel">WP4 掃單擷取模組</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G1</span></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>G2</span></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G3</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G4</span></div></div></div><div class="grow"><div class="glabel">WP5-1 影像資料集建置</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gbar soft"></div></div><div class="gcell"><div class="gbar soft"></div><div class="gmark"><span>G1</span></div></div><div class="gcell"><div class="gbar soft"></div></div><div class="gcell"><div class="gbar soft"></div></div><div class="gcell"><div class="gbar soft"></div></div><div class="gcell"><div class="gbar soft"></div></div><div class="gcell"><div class="gbar soft"></div><div class="gmark"><span>G2</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G3</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G4</span></div></div></div><div class="grow"><div class="glabel">WP5-2 辨識模型與證據融合</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G1</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>G2</span></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>G3</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G4</span></div></div></div><div class="grow"><div class="glabel">WP6 系統整合與驗證</div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G1</span></div></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"></div><div class="gcell"><div class="gmark"><span>G2</span></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>G3</span></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div></div><div class="gcell"><div class="gbar"></div><div class="gmark"><span>G4</span></div></div></div></div></div>
+    <div class="gantt-key">
+      <span><i style="background:var(--verify)"></i>主要工作</span>
+      <span><i style="background:#9FB4CE"></i>資料採集</span>
+      <span><i style="background:var(--halt)"></i>查核點</span>
+    </div>
+    <p style="font-size:14px;color:var(--graphite)">關鍵路徑風險集中於 W1 至 W4。藥單樣本、品項清單與實體藥品三項取得作業非本團隊可控，如第四週仍未到位，後續十二週工作將順延，本期期程無壓縮空間。</p>
+
+    <h3 id="s4-2">2、預定查核點說明</h3>
+    <div class="gates">
+      <div class="gaterow">
+        <div class="when">G1 ／ W4</div>
+        <div>
+          <h5>規格凍結查核</h5>
+          <p>查核項目：藥單版型與品項清單取得、備藥形態確認、核驗站與托盤設計凍結、光學規格計算完成、鎖控板與長料件下單、自動採集台開工。</p>
+          <div class="crit">通過條件：前四項全數達成，且長料件已完成下單。<br>未達成處置：暫停 WP4 與 WP5-2 之資源投入，提報目標值與期程調整方案。</div>
+        </div>
+      </div>
+      <div class="gaterow">
+        <div class="when">G2 ／ W9</div>
+        <div>
+          <h5>前段鏈路查核</h5>
+          <p>查核項目：掃單模組與確認介面、24 格鎖控與燈號導引、核驗站治具組立、30 品項資料集收集進度。</p>
+          <div class="crit">通過條件：掃單欄位正確率 ≥ 97%；解鎖正確率 100%；資料集達目標量 80%；核驗站可穩定取像。<br>未達成處置：品項數調整為 20，優先確保批次核驗核心之驗證完整性。</div>
+        </div>
+      </div>
+      <div class="gaterow">
+        <div class="when">G3 ／ W13</div>
+        <div>
+          <h5>核驗核心查核</h5>
+          <p>查核項目：格內分割與計數、嵌入模型與註冊流程、多路證據融合、三態判定與差異回報、邊緣模組移植。</p>
+          <div class="crit">通過條件：離線批次測試（含刻意構造錯誤）批次誤放率 ≤ 1%、批次卡關率 ≤ 25%；泛化組退化 ≤ 8 個百分點。<br>未達成處置：啟動輔助攔阻層備援定位（見（二）目標未達成之處置），並調整 WP6 測試設計。</div>
+        </div>
+      </div>
+      <div class="gaterow">
+        <div class="when">G4 ／ W16</div>
+        <div>
+          <h5>結案查核</h5>
+          <p>查核項目：五節點全鏈串接、事件留存、模擬病房情境測試（含具護理背景之操作者）、指標量測與結案報告。</p>
+          <div class="crit">通過條件：達成（二）技術發展目標全部指標；連續 200 次交易無須人工重啟；操作者可於無工程人員協助下完成全流程。<br>結案產出：雛型系統 1 套、技術報告 3 份、測試驗證報告 1 份、影像資料集 1 式，並提出次期臨床試辦之可行性建議。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+
+<div class="wrap">
+  <footer>
+    <span>ADC 掃單導引揀選與批次核驗 · POC 計畫書 v0.4</span>
+    <span>本版聚焦技術可行性 · 十六週 · 法規與臨床導入另案處理</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var thr=document.getElementById('thr'),nb=document.getElementById('nb');
+  var oThr=document.getElementById('oThr'),oNb=document.getElementById('oNb');
+  var vFar=document.getElementById('vFar'),vHold=document.getElementById('vHold'),vItem=document.getElementById('vItem');
+  var curveGen=document.getElementById('curveGen'),curveImp=document.getElementById('curveImp');
+  var lineHi=document.getElementById('lineHi'),lineLo=document.getElementById('lineLo');
+  var bandHold=document.getElementById('bandHold'),bandHalt=document.getElementById('bandHalt');
+  var lblGen=document.getElementById('lblGen'),lblImp=document.getElementById('lblImp'),lblHi=document.getElementById('lblHi');
+
+  var GEN={m:0.84,s:0.060}, IMP={m:0.46,s:0.100}, BAND=0.12;
+  var X0=0.2,X1=1.0,PX0=52,PX1=692,BASE=190,TOP=20;
+
+  function sx(v){return PX0+(v-X0)/(X1-X0)*(PX1-PX0);}
+  function erf(x){var s=x<0?-1:1;x=Math.abs(x);
+    var t=1/(1+0.3275911*x);
+    var y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);
+    return s*y;}
+  function cdf(x,m,s){return 0.5*(1+erf((x-m)/(s*Math.SQRT2)));}
+  function pdf(x,m,s){return Math.exp(-Math.pow(x-m,2)/(2*s*s))/(s*Math.sqrt(2*Math.PI));}
+
+  var peak=Math.max(pdf(GEN.m,GEN.m,GEN.s),pdf(IMP.m,IMP.m,IMP.s));
+  function buildPath(d){var p='',n=180;
+    for(var i=0;i<=n;i++){var x=X0+(X1-X0)*i/n;
+      var y=BASE-(pdf(x,d.m,d.s)/peak)*(BASE-TOP);
+      p+=(i?'L':'M')+sx(x).toFixed(1)+' '+y.toFixed(1);}
+    return p+'L'+PX1+' '+BASE+'L'+PX0+' '+BASE+'Z';}
+  curveGen.setAttribute('d',buildPath(GEN));
+  curveImp.setAttribute('d',buildPath(IMP));
+  lblGen.setAttribute('x',sx(GEN.m)+56);
+  lblImp.setAttribute('x',sx(IMP.m)-50);
+
+  function fmt(v){
+    if(v>=10) return v.toFixed(1)+'%';
+    if(v>=1) return v.toFixed(2)+'%';
+    if(v>=0.01) return v.toFixed(3)+'%';
+    return '<0.01%';
+  }
+  function update(){
+    var hi=parseFloat(thr.value), lo=hi-BAND, N=parseInt(nb.value,10);
+    oThr.textContent=hi.toFixed(2); oNb.textContent=N;
+
+    var farI=1-cdf(hi,IMP.m,IMP.s);
+    var holdI=cdf(hi,GEN.m,GEN.s)-cdf(lo,GEN.m,GEN.s);
+    var frrI=cdf(lo,GEN.m,GEN.s);
+    var stuckI=holdI+frrI;
+
+    var farB=(1-Math.pow(1-farI,N))*100;
+    var stuckB=(1-Math.pow(1-stuckI,N))*100;
+
+    vFar.innerHTML=fmt(farB);
+    vHold.innerHTML=fmt(stuckB);
+    vItem.innerHTML=fmt(farI*100);
+
+    var xh=sx(hi),xl=sx(lo);
+    lineHi.setAttribute('x1',xh); lineHi.setAttribute('x2',xh);
+    lineLo.setAttribute('x1',xl); lineLo.setAttribute('x2',xl);
+    bandHold.setAttribute('x',xl); bandHold.setAttribute('width',Math.max(0,xh-xl));
+    bandHalt.setAttribute('width',Math.max(0,xl-PX0));
+    lblHi.setAttribute('x',xh); lblHi.textContent=hi.toFixed(2);
+  }
+  thr.addEventListener('input',update);
+  nb.addEventListener('input',update);
+  update();
+})();
+</script>
+</body>
+</html>
