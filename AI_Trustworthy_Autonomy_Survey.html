@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可追溯與可稽核工業自主機器人 — 技術調研 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lightbox:#EEF1F4;
+  --paper:#FFFFFF;
+  --ink:#13171B;
+  --graphite:#5C666F;
+  --rule:#D2D9DF;
+  --rule-soft:#E4E9ED;
+  --verify:#1B4D8F;
+  --verify-soft:#E9F0F8;
+  --halt:#A81E28;
+  --halt-soft:#FAECEE;
+  --hold:#8A6A12;
+  --hold-soft:#F8F3E4;
+  --good:#22633F;
+  --good-soft:#EAF4EE;
+  --mono:"IBM Plex Mono","Roboto Mono",ui-monospace,monospace;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--lightbox);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.78;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px}
+.masthead{border-bottom:1px solid var(--rule)}
+.mast-inner{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding:18px 0;flex-wrap:wrap}
+.mark{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--graphite)}
+.mark b{color:var(--ink);font-weight:600}
+.meta{font-family:var(--mono);font-size:11px;color:var(--graphite);letter-spacing:.06em}
+.hero{padding:70px 0 16px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--verify);margin-bottom:22px}
+h1{font-weight:900;font-size:clamp(31px,5.1vw,56px);line-height:1.13;letter-spacing:-.024em;margin:0 0 26px;max-width:18ch}
+h1 em{font-style:normal;display:block;color:var(--graphite);font-weight:500;font-size:.43em;letter-spacing:0;line-height:1.65;margin-top:20px;max-width:52ch}
+.thesis{max-width:67ch;font-size:17px;border-left:2px solid var(--ink);padding-left:20px;margin:0 0 44px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin:0 0 48px}
+.kpi{background:var(--paper);padding:20px 20px 22px}
+.kpi .k{font-family:var(--mono);font-size:10.5px;color:var(--graphite);letter-spacing:.11em;text-transform:uppercase}
+.kpi .v{font-family:var(--mono);font-size:25px;font-weight:600;margin:7px 0 4px}
+.kpi p{margin:0;color:var(--graphite);font-size:12.8px;line-height:1.55}
+.layout{display:grid;grid-template-columns:185px 1fr;gap:58px;padding:58px 0 30px;align-items:start}
+nav.toc{position:sticky;top:24px;font-family:var(--mono);font-size:11.5px;line-height:1.9;border-top:1px solid var(--ink);padding-top:12px}
+nav.toc a{display:block;color:var(--graphite);text-decoration:none;letter-spacing:.02em;padding:1px 0}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--ink)}
+nav.toc a .n{display:inline-block;width:31px;color:#9BA4AC}
+nav.toc a.sub{padding-left:30px;font-size:10.7px;color:#8A939B}
+nav.toc a.sub .n{width:16px}
+nav.toc a.top{margin-top:7px}
+main{min-width:0;max-width:78ch}
+section{padding-bottom:66px}
+h2{font-size:27px;font-weight:900;letter-spacing:-.018em;margin:0 0 6px;padding-top:14px;border-top:1px solid var(--ink);scroll-margin-top:16px}
+h2 .sec{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--verify);letter-spacing:.14em;display:block;margin-bottom:12px}
+.lede{color:var(--graphite);font-size:15px;margin:10px 0 28px;max-width:64ch}
+h3{font-size:17px;font-weight:700;margin:33px 0 10px;letter-spacing:-.005em;scroll-margin-top:18px}
+p{margin:0 0 15px}
+ul{margin:0 0 16px;padding-left:0;list-style:none}
+ul li{position:relative;padding-left:20px;margin-bottom:9px}
+ul li::before{content:"";position:absolute;left:0;top:11px;width:7px;height:1px;background:var(--graphite)}
+code{font-family:var(--mono);font-size:.9em;background:var(--rule-soft);padding:1px 5px}
+strong{font-weight:700}
+.callout{border-left:2px solid var(--verify);background:#F7F9FB;padding:18px 20px;margin:24px 0}
+.callout .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--verify);display:block;margin-bottom:8px}
+.flag{border-left:2px solid var(--halt);padding:2px 0 2px 20px;margin:26px 0;font-size:14.5px}
+.flag .ft{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--halt);display:block;margin-bottom:7px}
+.flag p{margin:0}.flag p+p{margin-top:10px}
+.quote{font-size:18px;font-weight:700;line-height:1.55;margin:26px 0;padding:22px 24px;background:var(--paper);border:1px solid var(--rule)}
+.quote small{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--graphite);margin-top:10px;font-weight:400}
+.scroller{overflow-x:auto;margin:0 -28px;padding:0 28px}
+.tbl{width:100%;border-collapse:collapse;margin:20px 0 8px;font-size:13.8px}
+.tbl th{text-align:left;font-family:var(--mono);font-size:10.3px;letter-spacing:.09em;text-transform:uppercase;color:var(--graphite);font-weight:500;padding:0 14px 9px 0;border-bottom:1px solid var(--ink);white-space:nowrap}
+.tbl td{padding:13px 14px 13px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+.tbl td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:none}
+.badge{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 7px;border:1px solid var(--rule);white-space:nowrap}
+.badge.red{color:var(--halt);border-color:#E3BAC0;background:var(--halt-soft)}
+.badge.gold{color:var(--hold);border-color:#DFD0A5;background:var(--hold-soft)}
+.badge.blue{color:var(--verify);border-color:#B7C9DE;background:var(--verify-soft)}
+.badge.green{color:var(--good);border-color:#B6D4C2;background:var(--good-soft)}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:22px 0}
+.card{background:var(--paper);border:1px solid var(--rule);padding:22px 23px}
+.card .ck{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--verify);margin-bottom:8px}
+.card h4{font-size:16px;margin:0 0 8px}
+.card p{font-size:14px;color:var(--graphite);margin:0}
+.chain{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin:24px 0 10px}
+.node{background:var(--paper);padding:17px 14px 19px;position:relative}
+.node .ni{font-family:var(--mono);font-size:9.8px;letter-spacing:.12em;color:var(--verify);margin-bottom:7px}
+.node h4{margin:0 0 6px;font-size:13.4px}
+.node p{margin:0;font-size:11.5px;color:var(--graphite);line-height:1.55}
+.node .bar{position:absolute;left:0;right:0;bottom:0;height:3px}
+.arch{border:1px solid var(--rule);background:var(--paper);padding:28px 24px;margin:24px 0}
+.arch-title{font-weight:700;font-size:16px;margin-bottom:16px}
+.stack{display:grid;gap:8px}
+.layer{display:grid;grid-template-columns:155px 1fr;gap:18px;align-items:stretch}
+.layer .lk{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;padding:11px 12px;background:#F7F9FB;border:1px solid var(--rule)}
+.layer .lb{padding:11px 14px;border:1px solid var(--rule);font-size:13.5px;background:var(--paper)}
+.layer.learned .lk{color:var(--verify);border-left:3px solid var(--verify)}
+.layer.assure .lk{color:var(--hold);border-left:3px solid var(--hold)}
+.layer.safety .lk{color:var(--halt);border-left:3px solid var(--halt)}
+.layer.evidence .lk{color:var(--good);border-left:3px solid var(--good)}
+.pipe{border:1px solid var(--rule);background:var(--paper);margin:22px 0}
+.stage{display:grid;grid-template-columns:54px 1fr;border-bottom:1px solid var(--rule-soft)}
+.stage:last-child{border-bottom:none}
+.stage .idx{font-family:var(--mono);font-size:12px;color:var(--verify);border-right:1px solid var(--rule-soft);display:flex;align-items:center;justify-content:center;background:#F7F9FB}
+.stage .body{padding:16px 20px}.stage h5{margin:0 0 5px;font-size:14.5px}.stage p{margin:0;font-size:13.5px;color:var(--graphite);line-height:1.65}
+.maturity{border:1px solid var(--rule);background:var(--paper);padding:24px;margin:24px 0}
+.mrow{display:grid;grid-template-columns:180px 1fr 55px;gap:14px;align-items:center;margin:12px 0}
+.mname{font-size:13px}
+.track{height:12px;background:var(--rule-soft);position:relative}
+.fill{height:100%;background:var(--verify)}
+.score{font-family:var(--mono);font-size:11px;color:var(--graphite);text-align:right}
+.legend{font-family:var(--mono);font-size:10.5px;color:var(--graphite);margin-top:10px}
+.timeline{margin:22px 0;border-top:1px solid var(--ink)}
+.trow{display:grid;grid-template-columns:110px 1fr;gap:22px;border-bottom:1px solid var(--rule);padding:18px 0}
+.tdate{font-family:var(--mono);font-size:11px;color:var(--verify)}
+.tbody h5{margin:0 0 5px;font-size:14.5px}.tbody p{margin:0;color:var(--graphite);font-size:13.5px}
+.ref-list{counter-reset:refs;list-style:none;padding:0;margin:20px 0}
+.ref-list li{counter-increment:refs;padding:13px 0 13px 42px;border-bottom:1px solid var(--rule-soft);position:relative;font-size:13.5px}
+.ref-list li:before{content:"[" counter(refs) "]";position:absolute;left:0;top:13px;font-family:var(--mono);font-size:10.5px;color:var(--verify);width:34px;background:none}
+.ref-list a{color:var(--verify);text-decoration:none;border-bottom:1px solid #B7C9DE}
+.ref-list a:hover{color:var(--ink);border-color:var(--ink)}
+.src{font-family:var(--mono);font-size:10.5px;color:var(--graphite)}
+footer{border-top:1px solid var(--ink);padding:26px 0 60px;font-family:var(--mono);font-size:11px;color:var(--graphite);letter-spacing:.05em;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media(max-width:980px){
+  .layout{grid-template-columns:1fr;gap:0;padding-top:38px}
+  nav.toc{position:static;margin-bottom:44px;columns:2;column-gap:24px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .chain{grid-template-columns:repeat(3,1fr)}
+  .cards{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .wrap{padding:0 18px}.hero{padding-top:46px}
+  .scroller{margin:0 -18px;padding:0 18px}
+  nav.toc{columns:1}.kpis,.chain{grid-template-columns:1fr}
+  .layer{grid-template-columns:1fr;gap:0}.layer .lk{border-bottom:none}
+  .mrow{grid-template-columns:125px 1fr 42px}
+  .trow{grid-template-columns:82px 1fr}
+}
+@media print{
+  body{background:#fff}.wrap{max-width:none}.layout{grid-template-columns:1fr}.toc{display:none!important}
+  section{break-inside:avoid-page}.card,.arch,.maturity,.pipe{break-inside:avoid}
+  a{color:inherit!important;text-decoration:none!important}
+}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap mast-inner">
+    <div class="mark"><b>工業自主機器人</b> ／ Traceability · Auditability · Runtime Assurance</div>
+    <div class="meta">技術調研 · v2 · 2026-08-27 · Continuous Assurance</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Industrial Embodied AI · Trustworthy Autonomy</div>
+    <h1>AI機器人自主工作還不夠，<br>還要能追、能查、能證明。
+      <em>從 imitation learning、Diffusion Policy、VLA 到 robot foundation model：學習式機器人如何跨越「高成功率 demo」與「可被工業採用」之間的可信任落差。</em>
+    </h1>
+    <p class="thesis">本調研的核心判斷是：<strong>learned policy 本身通常不足以直接滿足工業場域的可追溯性與可稽核性要求。</strong>較具落地性的方向，是將 AI 的適應性與泛化能力置於可驗證的任務語意、技能契約、運行時安全邊界與完整證據鏈之中，形成 <strong>governed autonomy</strong>。</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="k">核心差距</div><div class="v" style="color:var(--halt)">Policy ≠ Skill</div><p>神經策略能輸出動作，不等於一個具版本、限制、適用域與失效處置的工業技能。</p></div>
+      <div class="kpi"><div class="k">工業要求</div><div class="v" style="color:var(--verify)">Evidence Chain</div><p>需求、資料、模型、決策、動作、品質結果與異常處置必須能串成可重建的證據鏈。</p></div>
+      <div class="kpi"><div class="k">主流補強</div><div class="v" style="color:var(--hold)">Runtime Assurance</div><p>不要求黑盒 policy 全面可證明，而是在執行時以 safety filter、shield、monitor 約束行為。</p></div>
+      <div class="kpi"><div class="k">研究定位</div><div class="v" style="color:var(--good)">Bounded Autonomy</div><p>讓 AI 在明確限制、驗證域與可回復機制內自主，而不是追求無界限 autonomy。</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap layout">
+<nav class="toc" aria-label="章節目錄">
+  <a class="top" href="#s0"><span class="n">00</span>執行摘要</a>
+  <a class="top" href="#s1"><span class="n">01</span>概念定義</a>
+  <a class="sub" href="#s1-1"><span class="n">A</span>Traceability</a>
+  <a class="sub" href="#s1-2"><span class="n">B</span>Auditability</a>
+  <a class="top" href="#s2"><span class="n">02</span>四個 Assurance Gap</a>
+  <a class="sub" href="#s2-1"><span class="n">A</span>Decision opacity</a>
+  <a class="sub" href="#s2-2"><span class="n">B</span>Competence uncertainty</a>
+  <a class="sub" href="#s2-3"><span class="n">C</span>Runtime failure</a>
+  <a class="sub" href="#s2-4"><span class="n">D</span>Model evolution</a>
+  <a class="top" href="#s3"><span class="n">03</span>為何工業特別在意</a>
+  <a class="top" href="#s4"><span class="n">04</span>學術界技術路線</a>
+  <a class="top" href="#s5"><span class="n">05</span>業界／標準觀點</a>
+  <a class="top" href="#s6"><span class="n">06</span>建議工業架構</a>
+  <a class="sub" href="#s6-1"><span class="n">A</span>Skill Contract</a>
+  <a class="sub" href="#s6-2"><span class="n">B</span>Runtime Assurance</a>
+  <a class="sub" href="#s6-3"><span class="n">C</span>Change Management</a>
+  <a class="sub" href="#s6-4"><span class="n">D</span>Evidence Chain</a>
+  <a class="top" href="#s7"><span class="n">07</span>研究題目與 Demo</a>
+  <a class="top" href="#s8"><span class="n">08</span>結論</a>
+  <a class="top" href="#refs"><span class="n">R</span>參考資料</a>
+</nav>
+
+<main>
+<section id="s0">
+  <h2><span class="sec">00</span>執行摘要</h2>
+  <p class="lede">本節以決策者角度回答三個問題：工業界要求什麼、熱門學習式機器人目前缺什麼、最值得投入的技術缺口是什麼。</p>
+
+  <div class="quote">「高任務成功率」與「可被工業稽核」是兩個不同的工程目標。<small>本調研綜合 NIST、ISO、EU AI Act、robot learning / formal methods 與業界安全框架後之判讀。</small></div>
+
+  <div class="cards">
+    <div class="card"><div class="ck">結論 01</div><h4>可追溯性不是只有 log</h4><p>工業 traceability 要能從需求、任務規劃、技能與模型版本一路追到感知輸入、實際動作、品質結果、異常與 recovery；NIST 也把開發流程、訓練資料來源、系統過程與結果的可追蹤紀錄視為 auditability 機制的一部分。</p></div>
+    <div class="card"><div class="ck">結論 02</div><h4>可稽核性要求「可判斷是否合理」</h4><p>Auditability 比 reconstruct event 更進一步：要知道此動作是否符合任務規格、安全限制、模型適用域與部署核准條件，並能由第三方或 QA 人員檢視證據。</p></div>
+    <div class="card"><div class="ck">結論 03</div><h4>IL / Diffusion / VLA 本身通常不夠</h4><p>它們可以提供強大的 visuomotor 或 task-level 能力，但 end-to-end 動作是高維神經網路映射，通常缺乏人可讀的規則鏈、有效域宣告與形式化約束，因此比較容易做到 execution logging，而非完整 industrial auditability。</p></div>
+    <div class="card"><div class="ck">結論 04</div><h4>工業落地最可行的是「智慧與保證分層」</h4><p>讓 VLA / policy 負責提出 plan 或 nominal action，再由 skill contract、runtime monitor、safety filter、certified controller 與 evidence layer 做限制與留證，形成 bounded / governed autonomy。</p></div>
+  </div>
+</section>
+
+<section id="s1">
+  <h2><span class="sec">01</span>工業語境下的可追溯性與可稽核性</h2>
+  <p class="lede">兩個詞常被混用。工程上最好將 traceability 視為「可重建」，auditability 視為「可重建＋可評估」。</p>
+
+  <h3 id="s1-1">A. 可追溯性 Traceability：能重建「發生了什麼」</h3>
+  <p>工業自主機器人的 traceability 應至少涵蓋：<strong>需求來源、任務計畫、skill ID / version、policy / model version、training / validation data lineage、感知輸入、機器人命令、執行軌跡、品質結果、異常事件與人員介入。</strong>重點不是單點資料存在，而是事件之間具可查詢的關聯。</p>
+
+  <div class="chain">
+    <div class="node"><div class="ni">01</div><h4>Task Req.</h4><p>工單、產品型號、品質規格、風險限制</p><div class="bar" style="background:var(--verify)"></div></div>
+    <div class="node"><div class="ni">02</div><h4>Plan</h4><p>任務分解、技能選擇、前置條件</p><div class="bar" style="background:var(--verify)"></div></div>
+    <div class="node"><div class="ni">03</div><h4>Skill / Model</h4><p>版本、訓練資料、驗證範圍</p><div class="bar" style="background:var(--hold)"></div></div>
+    <div class="node"><div class="ni">04</div><h4>Observation</h4><p>影像、F/T、狀態與時間戳</p><div class="bar" style="background:var(--hold)"></div></div>
+    <div class="node"><div class="ni">05</div><h4>Action</h4><p>policy proposal、filter 後命令與軌跡</p><div class="bar" style="background:var(--halt)"></div></div>
+    <div class="node"><div class="ni">06</div><h4>Outcome</h4><p>PASS / FAIL、品質數值、recovery</p><div class="bar" style="background:var(--good)"></div></div>
+  </div>
+  <p class="src">NIST AI RMF Playbook 明確提及 development process、training data sourcing，以及 AI processes / outcomes 的 logging 以支援 auditability。[1][2]</p>
+
+  <h3 id="s1-2">B. 可稽核性 Auditability：能判斷「這樣做是否合理」</h3>
+  <div class="scroller">
+  <table class="tbl">
+    <thead><tr><th>面向</th><th>Traceability</th><th>Auditability</th><th>機器人例子</th></tr></thead>
+    <tbody>
+      <tr><td>核心問題</td><td>發生了什麼？</td><td>為什麼允許這樣做？是否符合規範？</td><td>插入時出現 52 N 接觸力</td></tr>
+      <tr><td>主要目的</td><td>事件重建</td><td>合規、責任、V&V、根因判斷</td><td>52 N 是否超過 skill contract？</td></tr>
+      <tr><td>必要資料</td><td>input、model、action、result、time</td><td>再加 specification、limits、validation、approval</td><td>此 policy 是否驗證過該零件／公差？</td></tr>
+      <tr><td>理想輸出</td><td>完整 event chain</td><td>可被工程師／QA／第三方評估的 evidence</td><td>知道何時應 abort、為何未 abort</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout"><span class="tag">Engineering interpretation</span><strong>不需要解釋每一個 neuron 或每一個 0.01 rad 的 joint command。</strong>真正具工程價值的可稽核層級，是「任務為何被選擇 → 為何選這個 skill → 此 skill 在什麼限制下有效 → 執行時是否違反限制 → 發生異常如何處置」。</div>
+</section>
+
+<section id="s2">
+  <h2><span class="sec">02</span>Learned Autonomy 的四個 Industrial Assurance Gap</h2>
+  <p class="lede">問題不應只被描述成「黑盒模型不易解釋」。真正影響工業採用的是四種不同的 assurance gap：決策不可讀、能力邊界不清、執行失敗難以及時偵測，以及模型／資料更新後既有證據是否仍然有效。</p>
+  <div class="cards">
+    <div class="card" id="s2-1"><div class="ck">Gap 01</div><h4>Decision opacity｜為什麼選這個 plan / skill / action？</h4><p>VLA、IL 與 Diffusion Policy 能產生有效行為，但其內部映射通常不是人可直接稽核的規則鏈。工業系統因此需要把可稽核焦點移到 task representation、skill selection、constraints 與執行證據。</p></div>
+    <div class="card" id="s2-2"><div class="ck">Gap 02</div><h4>Competence uncertainty｜什麼情況下它仍然有效？</h4><p>一個 learned skill 必須宣告 validated domain：零件、治具、公差、感測器、光照、姿態、速度與接觸條件。OOD / uncertainty 機制負責判斷當前狀態是否仍位於已驗證能力範圍。</p></div>
+    <div class="card" id="s2-3"><div class="ck">Gap 03</div><h4>Runtime failure｜任務正在失敗時能不能及時知道？</h4><p>安全邊界沒有被突破，不代表任務仍然健康。插入卡滯、抓取滑移、fixture 偏移或 visual servo 漂移可能仍處於 safety limit 內，卻已經高度可能失敗。</p></div>
+    <div class="card" id="s2-4"><div class="ck">Gap 04</div><h4>Model evolution｜更新後原有 assurance evidence 還成立嗎？</h4><p>retraining、資料增補、相機／治具更換甚至 process tolerance 改動，都可能改變 policy 行為。工業部署真正的瓶頸可能從程式撰寫轉為 change impact analysis、regression、re-validation 與 re-qualification。</p></div>
+  </div>
+  <div class="quote">Learning may reduce programming cost, but it can increase <strong>assurance and change-management cost</strong>.<small>換型是否真的變快，取決於 learning time 加上 validation / assurance time，而不是只看模型訓練時間。</small></div>
+  <div class="flag"><span class="ft">四個概念不要混為一談</span><p><strong>OOD Detection</strong> 問「我有沒有看過這種情況？」；<strong>Uncertainty</strong> 問「我有多沒把握？」；<strong>Safety Monitoring</strong> 問「目前動作是否會跨越危險邊界？」；<strong>Failure Detection</strong> 則問「即使仍安全，任務是不是已經偏離正常成功軌跡？」。</p></div>
+</section>
+
+<section id="s3">
+  <h2><span class="sec">03</span>為什麼工業機器人特別在意這件事？</h2>
+  <p class="lede">製造場域不是只看 task completion。品質責任、功能安全、維護、換型、版本管理與事故調查，都要求系統在全生命週期留下可核對證據。</p>
+
+  <div class="cards">
+    <div class="card"><div class="ck">品質 QA</div><h4>結果要能與製程規格對上</h4><p>不是「成功抓到」就算成功，而是姿態、力、扭矩、鎖付值、插入深度、檢測結果都要落在製程規格內。</p></div>
+    <div class="card"><div class="ck">安全 Safety</div><h4>高成功率不能替代 hazard control</h4><p>一次低機率動作失敗若可能造成人員傷害或設備損壞，就需要獨立於 task reward 的 safety mechanism。</p></div>
+    <div class="card"><div class="ck">維運 Operations</div><h4>模型更新不能是黑箱替換</h4><p>必須知道更新了哪個模型、用什麼資料訓練、驗證哪些工件／情境、何時發布與何時回滾。</p></div>
+    <div class="card"><div class="ck">責任 Accountability</div><h4>事故要能重建</h4><p>需要證明當時的 observation、skill、policy、constraints、override、human intervention 與結果，而非只保留影片。</p></div>
+  </div>
+
+  <div class="quote">對工業 autonomous robot，更實際的目標不是「Explain every AI decision」，而是：<br><strong>Every autonomous action must be attributable, bounded, monitorable, reproducible and auditable.</strong></div>
+</section>
+
+<section id="s4">
+  <h2><span class="sec">04</span>學術界正在怎麼處理？</h2>
+  <p class="lede">目前可歸納成四條互補路線：可解釋／結構化策略、formal methods、runtime assurance，以及 uncertainty / OOD / human intervention。</p>
+
+  <div class="pipe">
+    <div class="stage"><div class="idx">01</div><div class="body"><h5>Interpretable / Structured Policy</h5><p>增加可閱讀的 task graph、symbolic state、language rationale 或 concept representation。優點是理解性高，但難直接對低階 continuous action 提供安全保證。</p></div></div>
+    <div class="stage"><div class="idx">02</div><div class="body"><h5>Formal Specification & Verification</h5><p>用 temporal logic、model checking、reachability、formal synthesis 等方式描述「policy 應滿足什麼」，並驗證或導引學習。2026 survey 將領域整理為 policy learning 與 policy verification 兩大柱。[7]</p></div></div>
+    <div class="stage"><div class="idx">03</div><div class="body"><h5>Runtime Assurance / Safety Shield</h5><p>讓 learned policy 產生 nominal action，再用 safety filter、control barrier function、constrained optimization 或 shield 在 runtime 限制不可接受動作。SHIELD 與 Adaptive Shielding 均屬此類。[9][10]</p></div></div>
+    <div class="stage"><div class="idx">04</div><div class="body"><h5>Failure / Anomaly / Progress Detection</h5><p>監控 execution trajectory 是否偏離成功軌跡，例如 force-time profile、grasp slip、visual progress、expected state transition 或 learned failure predictor。此類監測處理的是 task health，而非只看是否跨越 safety limit。</p></div></div>
+    <div class="stage"><div class="idx">05</div><div class="body"><h5>Uncertainty / OOD / Intervention</h5><p>建立 competence boundary：當 observation 或 state 超出 validated domain，停止、降級、re-perception、retry 或請求人員介入；Diff-DAgger 即利用 uncertainty 觸發 expert query。[8]</p></div></div>
+  </div>
+
+  <div class="callout"><span class="tag">重要趨勢</span>Formal methods 社群並不是假設「整個 end-to-end vision policy 很快就能完全形式驗證」。更實際的研究方向，是把<strong>可形式化的 specification、局部可驗證模組與 runtime monitoring</strong>組合起來，在 scalability 與 assurance 之間取平衡。[7]</div>
+</section>
+
+<section id="s5">
+  <h2><span class="sec">05</span>業界、標準與法規如何看待？</h2>
+  <p class="lede">共同訊號相當一致：不是拒絕 AI autonomy，而是要求 autonomy 在可界定限制、風險管理、技術文件、logging、V&V 與安全層之中運作。</p>
+
+  <div class="callout"><span class="tag">法規層級判讀</span><strong>對工業機器人，本調研建議把 EU Machinery Regulation 2023/1230 放在 EU AI Act 之前理解。</strong>前者直接面對 machinery、control system、self-evolving behaviour、defined task / movement space、software modification 與 safety-related logging；AI Act 則補充特定 AI system 的治理、風險管理、透明與紀錄義務。</div>
+
+  <div class="timeline">
+    <div class="trow"><div class="tdate">EU · 2023</div><div class="tbody"><h5>Machinery Regulation 2023/1230：autonomy、software evolution 與 machinery safety 正式接軌</h5><p>Annex III 要求具 fully or partially self-evolving behaviour / logic 且以不同 autonomy level 運作的控制系統，不得執行超出 defined task and movement space 的動作，並要求可修正以維持 inherent safety；對 software-based safety systems 的 safety-related decision process 亦要求 recording。另對 safety software version upload 設有 tracing-log 要求。[15]</p></div></div>
+    <div class="trow"><div class="tdate">ISO · 2021</div><div class="tbody"><h5>ISO/TR 22100-5: AI/ML machinery 必須在 specified limits 內討論風險</h5><p>文件處理的是設計在特定限制內運作的 AI/ML machinery；若 AI 被設計成超出指定限制並可能產生不可預測 effects，則不在該文件適用範圍。這可視為 bounded autonomy 的標準化訊號。[3]</p></div></div>
+    <div class="trow"><div class="tdate">ISO · 2024</div><div class="tbody"><h5>ISO/IEC TR 5469：明確區分 AI 與 safety function 的組合方式</h5><p>涵蓋 AI 位於 safety-related function、以 non-AI safety-related function 保護 AI-controlled equipment，以及用 AI 協助 safety function 開發三種情境。[4]</p></div></div>
+    <div class="trow"><div class="tdate">EU · 2024/26</div><div class="tbody"><h5>EU AI Act Article 12：high-risk AI 要有自動事件紀錄與適當 traceability</h5><p>法規要求 high-risk AI systems 具 automatic recording of events，logging 要支援風險識別、post-market monitoring 與 operation monitoring；Article 13 另要求足夠 transparency 以讓 deployer 適當解讀輸出。[5]</p></div></div>
+    <div class="trow"><div class="tdate">ISO · 2025</div><div class="tbody"><h5>ISO 10218-1/-2: 工業機器人安全回到 system / application integration</h5><p>Part 1 針對 industrial robot 本體，Part 2 針對 industrial robot applications / cells；AI 模型不太可能脫離 robot、tool、fixture、cell、controller 與使用情境單獨完成 assurance。[6]</p></div></div>
+    <div class="trow"><div class="tdate">Google · 2025/26</div><div class="tbody"><h5>Gemini Robotics：semantic / physical / operational 多層防護</h5><p>DeepMind 將安全描述為 Swiss-cheese 式多層 safeguards，並公開表示 VLA 可與 lower-level safety mechanisms 組合；On-Device 版本也提到以 low-level safety-critical controllers 執行動作。[11][12]</p></div></div>
+    <div class="trow"><div class="tdate">DGUV · 2021/26</div><div class="tbody"><h5>DGUV：AI 可支援 machinery safety，但現階段不應取代 conventional safety functions</h5><p>DGUV Test Information 05 提供 AI safety assessment 的一般原則；DGUV Forum 2026 更直接指出，因現行 normative / regulatory requirements 尚不完整，AI 目前可支援 safety functions、但不能取代 conventional safety functions，並要求從 sensor、controller、HMI、環境到 lifecycle 做 whole-system assessment。[16][17]</p></div></div>
+    <div class="trow"><div class="tdate">AMLAS</div><div class="tbody"><h5>AMLAS：把 ML assurance 從「模型測試」提升為 lifecycle safety case</h5><p>AMLAS 以六階段方法把 ML safety scoping、requirements、data management、model learning、verification 與 deployment 串成迭代 assurance process，要求各階段產出可支撐 explicit safety case 的 evidence。它不是 machinery 法規或 system-level safety standard，而是補足 ML component assurance 的方法論。[18][19]</p></div></div>
+    <div class="trow"><div class="tdate">NIST · 2026</div><div class="tbody"><h5>Smart Manufacturing Roadmap：trustworthy、explainable、reliable 已成工業 AI 核心障礙</h5><p>NIST 2026 roadmap 指出 AI/ML 工業部署仍面臨 industrial big data、異質 sensing/control 整合，以及 trustworthy、explainable、reliable operation 的關鍵挑戰。[13]</p></div></div>
+  </div>
+
+  <div class="flag"><span class="ft">不要過度延伸標準</span><p>上述 ISO/TR 與 AI Act 不代表「使用 Diffusion Policy 的工業機器人必然屬某一法規類別」或「某一特定 neural policy 已獲認證」。它們提供的是<strong>風險管理、bounded operation、technical documentation、logging、system-level assurance</strong>的方向性要求；實際合規仍須依機器、用途、司法管轄與 safety function 架構判斷。</p></div>
+</section>
+
+<section id="s6">
+  <h2><span class="sec">06</span>建議的工業化架構：Governed Learned Skill + Continuous Assurance</h2>
+  <p class="lede">最實際的設計不是試圖讓整個黑盒 policy 變成白盒，而是把智慧、執行監測、功能安全、變更管理與證據治理拆成可管理層次，並讓 assurance 隨模型與製程生命週期持續更新。</p>
+  <div class="arch"><div class="arch-title">Industrial Governed Autonomy Stack</div><div class="stack">
+    <div class="layer learned"><div class="lk">Learned Intelligence</div><div class="lb"><strong>VLM / VLA / Task Planner</strong>：理解需求、提出 task plan、選擇 candidate skill；<strong>Visuomotor Policy</strong>：產生 nominal action / trajectory。</div></div>
+    <div class="layer assure"><div class="lk">Skill Governance</div><div class="lb"><strong>Skill Contract</strong>：preconditions、parameter range、validated domain、success / failure criteria、version、model / data provenance、fallback。</div></div>
+    <div class="layer assure"><div class="lk">Runtime Assurance</div><div class="lb"><strong>Safety monitor + execution monitor + failure / anomaly detector + uncertainty / OOD + recovery supervisor</strong>：不是只有 action filter，而是完整監控 task health 與 competence boundary。</div></div>
+    <div class="layer safety"><div class="lk">Safety Control</div><div class="lb"><strong>Safety PLC / certified controller / low-level limits</strong>：處理獨立於 learned policy 的 safety-related functions、protective stop 與 emergency functions。</div></div>
+    <div class="layer evidence"><div class="lk">Change & Evidence</div><div class="lb"><strong>Change impact analysis + regression / re-validation + event log + data/model lineage + approval / rollback</strong>。</div></div>
+  </div></div>
+  <h3 id="s6-1">A. Skill Contract：把「一個模型」升級成「一個工業技能」</h3>
+  <div class="scroller"><table class="tbl"><thead><tr><th>欄位</th><th>Motor_Insert_A2 範例</th><th>稽核價值</th></tr></thead><tbody>
+    <tr><td>Skill ID / Version</td><td><code>Motor_Insert_A2 / v2.3</code></td><td>部署版本可查</td></tr><tr><td>Policy / Model</td><td><code>DiffusionPolicy_20260821.ckpt</code></td><td>模型版本與模型卡可查</td></tr><tr><td>Training / Validation Data</td><td><code>MD23_v5</code>；A/B/C 型馬達、特定治具與公差</td><td>建立 data lineage 與 validated domain</td></tr><tr><td>Constraints</td><td>Fz &lt; 40 N、TCP speed &lt; 80 mm/s、workspace envelope</td><td>runtime 可判斷 safety violation</td></tr><tr><td>Normal-envelope indicator</td><td>正常 insertion force profile、expected progress</td><td>failure detection 不必等到 safety limit</td></tr><tr><td>Abort / Fallback</td><td>force 超限、failure score、OOD、timeout → stop / retry / human</td><td>失效時有決定性處置</td></tr>
+  </tbody></table></div>
+  <h3 id="s6-2">B. Runtime Assurance：不只 Safety Filter，而是五種互補能力</h3>
+  <div class="pipe">
+    <div class="stage"><div class="idx">R1</div><div class="body"><h5>Safety Monitoring / Action Admissibility</h5><p>回答「這個 action 是否會進入危險狀態？」；檢查 collision、速度、workspace、力／扭矩 hard limit，必要時 reject / project / shield。</p></div></div>
+    <div class="stage"><div class="idx">R2</div><div class="body"><h5>Task Execution Monitoring</h5><p>回答「執行是否按照預期進展？」；監看 expected state transition、pose progression、contact sequence、visual progress 與時間窗。</p></div></div>
+    <div class="stage"><div class="idx">R3</div><div class="body"><h5>Failure / Anomaly Detection</h5><p>回答「任務是否已偏離成功軌跡？」；例如 insertion force profile 異常、grasp slip、fixture 偏移。它可能在仍未跨 safety limit 時就觸發 recovery。</p></div></div>
+    <div class="stage"><div class="idx">R4</div><div class="body"><h5>Uncertainty / OOD / Competence Boundary</h5><p>回答「當前 observation 是否仍屬於 validated domain？」。</p></div></div>
+    <div class="stage"><div class="idx">R5</div><div class="body"><h5>Recovery Supervisor</h5><p>依事件類型採 retry、re-perception、alternate skill、safe stop 或 human intervention，並保留 reason code。</p></div></div>
+  </div>
+  <div class="callout"><span class="tag">典型案例</span>插入時 <code>Fz = 28 N</code>，若 safety hard limit 為 <code>40 N</code>，Safety Filter 可能認為仍可執行；但若正常製程 envelope 通常低於 <code>12 N</code>，failure detector 應已判斷卡滯／錯位風險升高。<strong>安全 ≠ 任務健康。</strong></div>
+  <h3 id="s6-3">C. Model / Process Change Management：更新不是部署細節，而是 re-assurance 問題</h3>
+  <p>Learned robot 的部署成本不能只計算 demonstration 與 training。每一次 model、data、sensor、tool、fixture 或 process tolerance 變更，都應先做 change impact analysis，再決定既有 validation evidence 是否仍有效。</p>
+  <div class="chain">
+    <div class="node"><div class="ni">C1</div><h4>Change</h4><p>model / data / tool / sensor / process</p><div class="bar" style="background:var(--verify)"></div></div><div class="node"><div class="ni">C2</div><h4>Impact</h4><p>affected skills、hazards、validated domain</p><div class="bar" style="background:var(--hold)"></div></div><div class="node"><div class="ni">C3</div><h4>Regression</h4><p>既有 variant / edge-case regression</p><div class="bar" style="background:var(--hold)"></div></div><div class="node"><div class="ni">C4</div><h4>Re-validation</h4><p>performance、failure、OOD、constraints</p><div class="bar" style="background:var(--halt)"></div></div><div class="node"><div class="ni">C5</div><h4>Release</h4><p>approval、deployment、rollback package</p><div class="bar" style="background:var(--good)"></div></div><div class="node"><div class="ni">C6</div><h4>Monitor</h4><p>field evidence、drift、new failure</p><div class="bar" style="background:var(--good)"></div></div>
+  </div>
+  <div class="quote"><span style="font-family:var(--mono)">T<sub>deployment</sub></span> = T<sub>learning</sub> + T<sub>validation</sub> + T<sub>assurance</sub><small>若 learned skill 兩小時可學會，但 qualification 需要數日，真正的快速換型瓶頸就已經轉移。</small></div>
+  <p>這也是 EU Machinery Regulation 2023/1230 與 AMLAS 值得放進同一份調研、但角色不同的原因：前者提醒 machinery / safety software / autonomous control 的 lifecycle 與 configuration traceability；AMLAS 則提供 ML component 從 safety scoping、data、learning、verification 到 deployment 的 evidence-building 方法。[15][18][19]</p>
+  <h3 id="s6-4">D. Evidence Chain：從「有 log」升級成「持續可稽核證據」</h3>
+  <div class="pipe"><div class="stage"><div class="idx">E1</div><div class="body"><h5>Requirement provenance</h5><p>工單、產品 variant、製程規格與安全需求。</p></div></div><div class="stage"><div class="idx">E2</div><div class="body"><h5>Planning provenance</h5><p>planner input、task graph、skill selection 與 constraints。</p></div></div><div class="stage"><div class="idx">E3</div><div class="body"><h5>Model / Data provenance</h5><p>model hash / version、dataset version、validation report、deployment approval。</p></div></div><div class="stage"><div class="idx">E4</div><div class="body"><h5>Execution & Failure evidence</h5><p>observation、policy action、filter action、progress monitor、failure score、OOD、robot state。</p></div></div><div class="stage"><div class="idx">E5</div><div class="body"><h5>Change / Qualification evidence</h5><p>change request、impact analysis、regression scope、re-validation、release、rollback。</p></div></div><div class="stage"><div class="idx">E6</div><div class="body"><h5>Outcome & Recovery</h5><p>品質結果、failure code、retry / fallback、human intervention。</p></div></div></div>
+  <div class="callout"><span class="tag">核心工程思想</span><strong>Unverified intelligence inside verified boundaries — and continuously re-assured when those boundaries or models change.</strong></div>
+</section>
+
+<section id="s7">
+  <h2><span class="sec">07</span>對「機器人任務自主規劃與決策」研究的建議</h2>
+  <p class="lede">若研究計畫只寫「VLM/VLA 任務理解 → 自動規劃 → Diffusion Policy 執行」，很容易與國際 embodied-AI demo 同質化。工業化差異點應放在「可稽核 autonomy」。</p>
+
+  <div class="cards">
+    <div class="card"><div class="ck">研究主軸 A</div><h4>Auditable Task Planning</h4><p>任務計畫採結構化 representation；每個 subtask 有來源、precondition、constraint 與理由；planner output 可對應製造需求與設備能力。</p></div>
+    <div class="card"><div class="ck">研究主軸 B</div><h4>Governed Skill Learning</h4><p>把 learned visuomotor policy 封裝為帶 contract 的 skill：建立 validated domain、model/data lineage、版本、成功／失敗定義與可替換 policy。</p></div>
+    <div class="card"><div class="ck">研究主軸 C</div><h4>Runtime Failure-aware Assurance</h4><p>除 safety monitor 外，加入 execution progress、failure / anomaly prediction、uncertainty / OOD 與 recovery supervisor，區分「危險」與「任務正在失敗」。</p></div>
+    <div class="card"><div class="ck">研究主軸 D</div><h4>Continuous Assurance & Change Management</h4><p>建立 model / data / process change impact analysis、regression 與 re-validation，讓模型更新有 evidence scope、release gate 與 rollback。</p></div>
+  </div>
+
+  <h3>建議 Demo：用「可稽核」而不是只用成功率展現技術</h3>
+  <div class="scroller"><table class="tbl">
+    <thead><tr><th>Demo</th><th>傳統展示方式</th><th>建議新增的可稽核展示</th></tr></thead>
+    <tbody>
+      <tr><td>換型組裝</td><td>新型號可自行規劃並完成組裝</td><td>顯示 task plan 來源、skill contract、policy version、validated part range 與每步 evidence</td></tr>
+      <tr><td>不規則插入</td><td>Diffusion Policy 能處理姿態／接觸變異</td><td>故意製造 OOD pose 或過大阻力，系統識別超界並 abort / recovery</td></tr>
+      <tr><td>錯誤技能提案</td><td>不常展示</td><td>Planner 提出不符 constraint 的 skill，governance layer 拒絕並留下 reason code</td></tr>
+      <tr><td>模型／資料更新</td><td>換新版模型後成功率提升</td><td>展示 v2.3 → v2.4 的 change impact analysis：哪些 evidence 仍有效、哪些 variant 需 regression、哪些條件需 re-validation，再進 release / rollback gate</td></tr>
+      <tr><td>事故回溯</td><td>播放執行影片</td><td>從工單一路 drill-down 到 observation、action、filter、force peak、failure code 與 human intervention</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s8">
+  <h2><span class="sec">08</span>結論：工業 Embodied AI 的競爭點將從「會做」走向「可信任地做」</h2>
+  <p class="lede">Robot foundation model 提高了能力上限，但製造現場的採用門檻仍由可靠性、安全、可管理性與責任證據決定。</p>
+
+  <div class="quote">真正適合工業化的 autonomous robot，不一定需要把神經網路完全「解釋清楚」；但它必須能證明：<br><strong>我是誰的版本、我在什麼範圍能做、我為何被允許做、我做了什麼、我有沒有超界、結果是否合格、出事如何重建。</strong></div>
+
+  <p>因此，最值得投入的研究缺口不是再做一個更大的 policy，而是建立一個能承接 learned intelligence 的 <strong>Industrial Autonomy Layer</strong>：以 task traceability、skill governance、runtime assurance、safety constraints、validation 與 audit trail，把 frontier robotics intelligence 轉換成可部署、可驗證、可維運的工業自主能力。</p>
+</section>
+
+<section id="refs">
+  <h2><span class="sec">R</span>主要參考資料</h2>
+  <p class="lede">以下以官方標準／機構資料優先，另補充近年的 robot learning 與 formal methods 代表工作。調研更新至 2026-08-27。</p>
+  <ol class="ref-list">
+    <li><strong>NIST AI RMF Playbook — Govern.</strong> Auditability mechanism 包含 development process、training data sourcing、system process/outcome logging。 <a href="https://airc.nist.gov/airmf-resources/playbook/govern/" target="_blank" rel="noopener">NIST</a></li>
+    <li><strong>NIST AI RMF Playbook — Measure.</strong> 提及 testing、documentation、auditability 與 third-party audit。 <a href="https://airc.nist.gov/airmf-resources/playbook/measure/" target="_blank" rel="noopener">NIST</a></li>
+    <li><strong>ISO/TR 22100-5:2021.</strong> Safety of machinery — implications of AI/ML；聚焦 designed to act within specific limits。 <a href="https://www.iso.org/standard/80778.html" target="_blank" rel="noopener">ISO</a></li>
+    <li><strong>ISO/IEC TR 5469:2024.</strong> Artificial intelligence — Functional safety and AI systems。 <a href="https://www.iso.org/standard/81283.html" target="_blank" rel="noopener">ISO</a></li>
+    <li><strong>Regulation (EU) 2024/1689, Article 12–13.</strong> High-risk AI record-keeping / traceability / transparency。 <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/2026-07-27/eng" target="_blank" rel="noopener">EUR-Lex</a></li>
+    <li><strong>ISO 10218-1:2025 / ISO 10218-2:2025.</strong> Industrial robots 與 robot applications / cells 的 safety requirements。 <a href="https://www.iso.org/standard/73933.html" target="_blank" rel="noopener">ISO</a></li>
+    <li><strong>Manganaris et al., 2026.</strong> Formal Methods in Robot Policy Learning and Verification: A Survey on Current Techniques and Future Directions. <a href="https://arxiv.org/abs/2602.06971" target="_blank" rel="noopener">arXiv</a></li>
+    <li><strong>Lee & Kuo, 2024.</strong> Diff-DAgger: Uncertainty Estimation with Diffusion Policy for Robotic Manipulation. <a href="https://arxiv.org/abs/2410.14868" target="_blank" rel="noopener">arXiv</a></li>
+    <li><strong>Yang et al., 2025.</strong> SHIELD: Safety on Humanoids via CBFs In Expectation on Learned Dynamics. <a href="https://arxiv.org/abs/2505.11494" target="_blank" rel="noopener">arXiv</a></li>
+    <li><strong>Kwon et al., 2025.</strong> Runtime Safety through Adaptive Shielding: From Hidden Parameter Inference to Provable Guarantees. <a href="https://arxiv.org/abs/2506.11033" target="_blank" rel="noopener">arXiv</a></li>
+    <li><strong>Google DeepMind — Gemini Robotics safety framework.</strong> Semantic, physical, operational safeguards。 <a href="https://deepmind.google/models/gemini-robotics/responsibly-advancing-ai-and-robotics/" target="_blank" rel="noopener">DeepMind</a></li>
+    <li><strong>Google DeepMind — Gemini Robotics On-Device.</strong> 提到與 low-level safety critical controllers 介接執行動作。 <a href="https://deepmind.google/blog/gemini-robotics-on-device-brings-ai-to-local-robotic-devices/" target="_blank" rel="noopener">DeepMind</a></li>
+    <li><strong>NIST, 2026.</strong> 2026 Roadmap on Artificial Intelligence and Machine Learning for Smart Manufacturing. <a href="https://www.nist.gov/publications/2026-roadmap-artificial-intelligence-and-machine-learning-smart-manufacturing" target="_blank" rel="noopener">NIST</a></li>
+    <li><strong>NIST — AI for Manufacturing.</strong> Ongoing program on AI manufacturing evaluation, metrics, standards advancement and trustworthy adoption. <a href="https://www.nist.gov/programs-projects/artificial-intelligence-ai-manufacturing" target="_blank" rel="noopener">NIST</a></li>
+    <li><strong>UL Solutions — UL 4600 / autonomy safety cases.</strong> Goal-based, technology-agnostic safety-case approach for autonomous products and robotics V&V. <a href="https://www.ul.com/insights/applying-automotive-ai-safety-lessons-robotics-and-automation" target="_blank" rel="noopener">UL Solutions</a></li>
+  
+    <li><strong>Regulation (EU) 2023/1230 on machinery.</strong> Annex II / III 對 safety software、self-evolving ML safety components、autonomous control、defined task / movement space、safety-related decision recording 與 software-version tracing 的要求。 <a href="https://eur-lex.europa.eu/eli/reg/2023/1230/2026-07-27/eng" target="_blank" rel="noopener">EUR-Lex</a></li>
+    <li><strong>DGUV Test Information 05 (2021).</strong> General Principles for Assessing the Safety of Artificial Intelligence (AI). <a href="https://publikationen.dguv.de/praevention/pruefung-zertifizierung/4604/dguv-testinformation-05-general-principles-for-assessing-the-safety-of-artificial-intelligence-ai" target="_blank" rel="noopener">DGUV</a></li>
+    <li><strong>DGUV Forum 1/2026.</strong> KI in der Maschinensicherheit: Potenziale, Grenzen und sichere Einbindung；強調 AI 目前可支援但不取代 conventional safety functions，並要求 whole-system lifecycle view。 <a href="https://forum.dguv.de/ausgabe-1-2026/ki-in-der-maschinensicherheit/" target="_blank" rel="noopener">DGUV Forum</a></li>
+    <li><strong>AMLAS — Assurance of Machine Learning for use in Autonomous Systems.</strong> 六階段 ML assurance methodology，將 safety case 與 ML development 迭代整合。 <a href="https://www.assuringautonomy.com/amlas" target="_blank" rel="noopener">Assuring Autonomy</a></li>
+    <li><strong>AMLAS Introduction / Process.</strong> ML safety assurance scoping、requirements、data management、model learning、verification、deployment 與 evidence / safety argument 之關係。 <a href="https://www.assuringautonomy.com/en/amlas/stages/introduction" target="_blank" rel="noopener">Assuring Autonomy</a></li></ol>
+</section>
+</main>
+</div>
+
+<div class="wrap">
+<footer>
+  <span>可追溯與可稽核工業自主機器人 · 技術調研 2026</span>
+  <span>Research brief · Industrial Embodied AI · Governed Autonomy</span>
+</footer>
+</div>
+</body>
+</html>
